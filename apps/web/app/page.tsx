@@ -9,9 +9,14 @@ import { FileText, Users, Package, TrendingUp, Check } from 'lucide-react'
 export default function HomePage() {
   const pages = [
     { name: 'Component Gallery', href: '/preview', status: 'complete' },
+    { name: 'How It Works', href: '/how-it-works', status: 'complete' },
+    { name: 'Browse Suppliers', href: '/browse-suppliers', status: 'complete' },
+    { name: 'Buyer Dashboard', href: '/buyer/dashboard', status: 'complete' },
     { name: 'Buyer RFQ Wizard', href: '/buyer/rfqs/new', status: 'complete' },
-    { name: 'Supplier Onboarding', href: '/supplier/register', status: 'complete' },
-    { name: 'Inventory Management', href: '/buyer/inventory', status: 'complete' },
+    { name: 'Buyer Inventory', href: '/buyer/inventory', status: 'complete' },
+    { name: 'Supplier Dashboard', href: '/supplier/dashboard', status: 'complete' },
+    { name: 'Supplier Onboarding', href: '/supplier/setup', status: 'complete' },
+    { name: 'Quote Submission', href: '/supplier/rfqs', status: 'complete' },
     { name: 'Auth (Supabase)', href: '#', status: 'coming-soon' },
     { name: 'Live Data Wiring', href: '#', status: 'coming-soon' },
     { name: 'Payments/Escrow', href: '#', status: 'planned' },
@@ -40,10 +45,10 @@ export default function HomePage() {
               <Link href="/preview">View Component Gallery</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/buyer-register">Get Started as Buyer</Link>
+              <Link href="/how-it-works">How It Works</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/supplier-register">Join as Supplier</Link>
+              <Link href="/browse-suppliers">Browse Suppliers</Link>
             </Button>
           </div>
         </div>

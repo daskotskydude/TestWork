@@ -1,0 +1,186 @@
+'use client'
+
+import Link from 'next/link'
+import { AppShell } from '@/components/layout/AppShell'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { FileText, Send, ShoppingCart, Package } from 'lucide-react'
+import { useMockStore } from '@/lib/mock-store'
+
+export default function SupplierDashboardPage() {
+  const { rfqs, quotes } = useMockStore()
+
+  // Mock: show all RFQs to supplier (in real app, would filter by category/visibility)
+  const openRFQs = rfqs.filter((r) => r.status === 'open')
+  const myQuotes = quotes // In real app, filter by supplier_id
+
+  const stats = [
+    {
+      title: 'Open RFQs',
+      value: openRFQs.length,
+      icon: FileText,
+      color: 'text-blue-600',
+      href: '/supplier/rfqs',
+    },
+    {
+      title: 'Quotes Sent',
+      value: myQuotes.length,
+      icon: Send,
+      color: 'text-green-600',
+      href: '/supplier/quotes',
+    },
+    {
+      title: 'Active Orders',
+      value: 0, // Mock
+      icon: ShoppingCart,
+      color: 'text-orange-600',
+      href: '/supplier/orders',
+    },
+    {
+      title: 'Catalog Items',
+      value: 0, // Mock
+      icon: Package,
+      color: 'text-purple-600',
+      href: '/supplier/catalog',
+    },
+  ]
+
+  return (
+    <AppShell role="supplier">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold">Supplier Dashboard</h1>
+          <p className="text-muted-foreground">Manage RFQs, quotes, and orders</p>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat) => {
+            const Icon = stat.icon
+            return (
+              <Link key={stat.title} href={stat.href}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                        <p className="text-3xl font-bold mt-2">{stat.value}</p>
+                      </div>
+                      <Icon className={`h-10 w-10 ${stat.color}`} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            )
+          })}
+        </div>
+
+        {/* Open RFQs */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Open RFQs</CardTitle>
+                <CardDescription>Opportunities to submit quotes</CardDescription>
+              </div>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/supplier/rfqs">View All</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {openRFQs.slice(0, 3).map((rfq) => (
+                <div
+                  key={rfq.id}
+                  className="p-4 border rounded-lg hover:bg-accent transition-colors"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium">{rfq.title}</p>
+                    <Badge variant="success">Open</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">{rfq.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {rfq.items.length} items • {rfq.category}
+                    </span>
+                    <Button asChild size="sm">
+                      <Link href={`/supplier/rfqs/${rfq.id}`}>Submit Quote</Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {openRFQs.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No open RFQs at the moment. Check back later!</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Quotes */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent Quotes</CardTitle>
+                <CardDescription>Quotes you've submitted</CardDescription>
+              </div>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/supplier/quotes">View All</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {myQuotes.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Send className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No quotes submitted yet. Start by responding to open RFQs!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {myQuotes.slice(0, 3).map((quote) => {
+                  const rfq = rfqs.find((r) => r.id === quote.rfq_id)
+                  return (
+                    <div key={quote.id} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="font-medium">{rfq?.title || 'RFQ'}</p>
+                        <Badge
+                          variant={
+                            quote.status === 'accepted'
+                              ? 'success'
+                              : quote.status === 'rejected'
+                              ? 'error'
+                              : 'secondary'
+                          }
+                        >
+                          {quote.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Total: {quote.currency} {quote.total_price.toLocaleString()} • 
+                        Lead time: {quote.lead_time_days} days
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Mock Data Notice */}
+        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <p className="text-sm text-blue-900 dark:text-blue-100">
+            <strong>📍 Phase B:</strong> All data shown is mock/local data. Your changes are 
+            saved in browser localStorage. Phase C will add Supabase for real persistence.
+          </p>
+        </div>
+      </div>
+    </AppShell>
+  )
+}
