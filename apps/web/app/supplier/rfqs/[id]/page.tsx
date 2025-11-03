@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { AppShell } from '@/components/layout/AppShell'
@@ -9,14 +9,23 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Package, DollarSign, Clock, Send } from 'lucide-react'
-import { useMockStore, type Quote } from '@/lib/mock-store'
+import { ArrowLeft, Package, DollarSign, Clock, Send, Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useSupabase } from '@/../../packages/lib/useSupabase'
+import { getRFQ, getRFQItems, listQuotes, createQuote } from '@/../../packages/lib/data'
+import type { RFQ, RFQItem, Quote } from '@/../../packages/lib/supabaseClient'
 import { toast } from 'sonner'
 
 export default function SupplierRFQDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { getRFQ, addQuote, getQuotesForRFQ } = useMockStore()
+  const { user } = useAuth()
+  const supabase = useSupabase()
+  const [rfq, setRfq] = useState<RFQ | null>(null)
+  const [items, setItems] = useState<RFQItem[]>([])
+  const [quotes, setQuotes] = useState<Quote[]>([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
   const [showQuoteForm, setShowQuoteForm] = useState(false)
   const [quoteData, setQuoteData] = useState({
     total_price: 0,
@@ -25,9 +34,47 @@ export default function SupplierRFQDetailPage() {
     notes: '',
   })
 
-  const rfq = getRFQ(params?.id as string)
-  const existingQuotes = getQuotesForRFQ(params?.id as string)
-  const hasMyQuote = existingQuotes.length > 0 // Mock: assume supplier has only one quote
+  useEffect(() => {
+    loadRFQData()
+  }, [params?.id, user])
+
+  async function loadRFQData() {
+    if (!params?.id || !user) return
+
+    try {
+      const rfqId = params.id as string
+      
+      // Load RFQ details
+      const rfqData = await getRFQ(supabase, rfqId)
+      setRfq(rfqData)
+
+      // Load RFQ items
+      const itemsData = await getRFQItems(supabase, rfqId)
+      setItems(itemsData)
+
+      // Load quotes for this RFQ
+      const quotesData = await listQuotes(supabase, rfqId)
+      setQuotes(quotesData)
+    } catch (error) {
+      console.error('Failed to load RFQ:', error)
+      toast.error('Failed to load RFQ details')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const myQuote = quotes.find(q => q.supplier_id === user?.id)
+  const hasMyQuote = !!myQuote
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppShell>
+    )
+  }
 
   if (!rfq) {
     return (
@@ -43,26 +90,30 @@ export default function SupplierRFQDetailPage() {
     )
   }
 
-  const handleSubmitQuote = (e: React.FormEvent) => {
+  const handleSubmitQuote = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user || !rfq) return
 
-    const newQuote: Quote = {
-      id: `quote-${Date.now()}`,
-      rfq_id: rfq.id,
-      supplier_id: 'supplier-1',
-      supplier_name: 'Gulf Foods Trading', // Mock
-      total_price: quoteData.total_price,
-      currency: quoteData.currency,
-      lead_time_days: quoteData.lead_time_days,
-      notes: quoteData.notes || undefined,
-      status: 'sent',
-      created_at: new Date().toISOString(),
+    setSubmitting(true)
+    try {
+      await createQuote(supabase, {
+        rfq_id: rfq.id,
+        supplier_id: user.id,
+        total_price: quoteData.total_price,
+        currency: quoteData.currency,
+        lead_time_days: quoteData.lead_time_days,
+        notes: quoteData.notes || undefined,
+      })
+
+      toast.success('Quote submitted successfully!')
+      setShowQuoteForm(false)
+      router.push('/supplier/rfqs')
+    } catch (error) {
+      console.error('Failed to submit quote:', error)
+      toast.error('Failed to submit quote')
+    } finally {
+      setSubmitting(false)
     }
-
-    addQuote(newQuote)
-    toast.success('Quote submitted successfully!')
-    setShowQuoteForm(false)
-    router.push('/supplier/quotes')
   }
 
   return (
@@ -135,7 +186,7 @@ export default function SupplierRFQDetailPage() {
         {/* Items Required */}
         <Card>
           <CardHeader>
-            <CardTitle>Items Requested ({rfq.items.length})</CardTitle>
+            <CardTitle>Items Requested ({items.length})</CardTitle>
             <CardDescription>Products the buyer needs</CardDescription>
           </CardHeader>
           <CardContent>
@@ -151,7 +202,7 @@ export default function SupplierRFQDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rfq.items.map((item) => (
+                  {items.map((item) => (
                     <tr key={item.id} className="border-b">
                       <td className="py-3 font-medium">{item.name}</td>
                       <td className="py-3 text-sm text-muted-foreground">{item.sku || '-'}</td>
@@ -265,11 +316,25 @@ export default function SupplierRFQDetailPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button type="submit">
-                    <Send className="h-4 w-4 mr-2" />
-                    Submit Quote
+                  <Button type="submit" disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Submit Quote
+                      </>
+                    )}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowQuoteForm(false)}>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowQuoteForm(false)}
+                    disabled={submitting}
+                  >
                     Cancel
                   </Button>
                 </div>
