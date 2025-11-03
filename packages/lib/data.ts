@@ -138,6 +138,20 @@ export async function deleteRFQ(supabase: SupabaseClient, rfqId: string) {
   if (error) throw error;
 }
 
+/**
+ * Get RFQ items for a specific RFQ
+ */
+export async function getRFQItems(supabase: SupabaseClient, rfqId: string) {
+  const { data, error } = await supabase
+    .from('rfq_items')
+    .select('*')
+    .eq('rfq_id', rfqId)
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+  return data as RFQItem[];
+}
+
 // ============================================
 // QUOTES
 // ============================================

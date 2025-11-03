@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { AppShell } from '@/components/layout/AppShell'
@@ -9,14 +9,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { ArrowLeft, Package, DollarSign, Clock, Check } from 'lucide-react'
-import { useMockStore } from '@/lib/mock-store'
+import { ArrowLeft, Package, DollarSign, Clock, Check, Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useSupabase } from '@/../../packages/lib/useSupabase'
+import { getRFQ, getRFQItems, listQuotes, createOrder } from '@/../../packages/lib/data'
+import type { RFQ, RFQItem, Quote } from '@/../../packages/lib/supabaseClient'
 import { toast } from 'sonner'
 
 export default function RFQDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { getRFQ, getQuotesForRFQ, acceptQuote } = useMockStore()
+  const { user } = useAuth()
+  const supabase = useSupabase()
+  const [rfq, setRfq] = useState<RFQ | null>(null)
+  const [rfqItems, setRfqItems] = useState<RFQItem[]>([])
+  const [quotes, setQuotes] = useState<Quote[]>([])
+  const [loading, setLoading] = useState(true)
   const [showQuoteForm, setShowQuoteForm] = useState(false)
   const [quoteData, setQuoteData] = useState({
     total_price: 0,
@@ -25,8 +33,40 @@ export default function RFQDetailPage() {
     notes: '',
   })
 
-  const rfq = getRFQ(params?.id as string)
-  const quotes = getQuotesForRFQ(params?.id as string)
+  useEffect(() => {
+    async function loadRFQData() {
+      if (!user || !params?.id) return
+
+      try {
+        const [rfqData, itemsData, quotesData] = await Promise.all([
+          getRFQ(supabase, params.id as string),
+          getRFQItems(supabase, params.id as string),
+          listQuotes(supabase, params.id as string),
+        ])
+
+        setRfq(rfqData)
+        setRfqItems(itemsData)
+        setQuotes(quotesData)
+      } catch (error) {
+        console.error('Failed to load RFQ:', error)
+        toast.error('Failed to load RFQ details')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadRFQData()
+  }, [user, params?.id, supabase])
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppShell>
+    )
+  }
 
   if (!rfq) {
     return (
@@ -42,11 +82,28 @@ export default function RFQDetailPage() {
     )
   }
 
-  const handleAcceptQuote = (quoteId: string) => {
-    const orderId = acceptQuote(quoteId)
-    if (orderId) {
+  const handleAcceptQuote = async (quoteId: string) => {
+    if (!user || !rfq) return
+
+    try {
+      const quote = quotes.find(q => q.id === quoteId)
+      if (!quote) return
+
+      const order = await createOrder(supabase, {
+        rfq_id: rfq.id,
+        quote_id: quoteId,
+        buyer_id: user.id,
+        supplier_id: quote.supplier_id,
+        total_price: quote.total_price,
+        currency: quote.currency,
+        lead_time_days: quote.lead_time_days,
+      })
+
       toast.success('Quote accepted! Order created.')
-      router.push(`/buyer/orders/${orderId}`)
+      router.push(`/buyer/orders/${order.id}`)
+    } catch (error) {
+      console.error('Failed to accept quote:', error)
+      toast.error('Failed to accept quote. Please try again.')
     }
   }
 
@@ -120,7 +177,7 @@ export default function RFQDetailPage() {
         {/* Items */}
         <Card>
           <CardHeader>
-            <CardTitle>Items ({rfq.items.length})</CardTitle>
+            <CardTitle>Items ({rfqItems.length})</CardTitle>
             <CardDescription>Products requested in this RFQ</CardDescription>
           </CardHeader>
           <CardContent>
@@ -136,7 +193,7 @@ export default function RFQDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rfq.items.map((item) => (
+                  {rfqItems.map((item) => (
                     <tr key={item.id} className="border-b">
                       <td className="py-3 font-medium">{item.name}</td>
                       <td className="py-3 text-sm text-muted-foreground">{item.sku || '-'}</td>
@@ -178,7 +235,7 @@ export default function RFQDetailPage() {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h4 className="font-semibold text-lg">{quote.supplier_name}</h4>
+                        <h4 className="font-semibold text-lg">Supplier Quote</h4>
                         <p className="text-sm text-muted-foreground">
                           Submitted {new Date(quote.created_at).toLocaleDateString()}
                         </p>
