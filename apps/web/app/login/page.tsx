@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
@@ -11,7 +11,7 @@ import { AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, profile } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -25,16 +25,30 @@ export default function LoginPage() {
     try {
       await signIn(email, password);
       
-      // Redirect will happen automatically via auth state change
-      // But we can force it here for better UX
-      router.push('/');
-      router.refresh();
+      // Wait a moment for profile to load
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // The auth context will trigger a re-render with profile data
+      // Redirect happens in useEffect below
     } catch (err: any) {
       setError(err.message || 'Failed to sign in');
-    } finally {
       setLoading(false);
     }
   };
+
+  // Redirect after successful login based on role
+  useEffect(() => {
+    if (profile) {
+      if (profile.role === 'buyer') {
+        router.push('/buyer/dashboard');
+      } else if (profile.role === 'supplier') {
+        router.push('/supplier/dashboard');
+      } else {
+        router.push('/');
+      }
+      router.refresh();
+    }
+  }, [profile, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

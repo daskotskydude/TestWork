@@ -15,7 +15,7 @@ export default function SupplierQuotesPage() {
   const myQuotes = quotes
 
   return (
-    <AppShell role="supplier">
+    <AppShell>
       <div className="space-y-6">
         {/* Header */}
         <div>

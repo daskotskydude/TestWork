@@ -1,21 +1,22 @@
 'use client'
 
 import { useState } from 'react'
+import { useAuth } from '@/lib/auth-context'
 import { TopNav } from './TopNav'
 import { SideNav } from './SideNav'
 
 interface AppShellProps {
   children: React.ReactNode
-  role?: 'buyer' | 'supplier' | null
 }
 
-export function AppShell({ children, role = null }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
+  const { profile } = useAuth()
   const [sideNavOpen, setSideNavOpen] = useState(true)
+  const role = profile?.role || null
 
   return (
     <div className="min-h-screen bg-background">
       <TopNav 
-        userRole={role} 
         onMenuClick={() => setSideNavOpen(!sideNavOpen)}
       />
       

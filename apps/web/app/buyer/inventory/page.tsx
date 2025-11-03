@@ -70,7 +70,7 @@ export default function BuyerInventoryPage() {
   const lowStockItems = inventory.filter((i) => i.qty <= i.reorder_level)
 
   return (
-    <AppShell role="buyer">
+    <AppShell>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

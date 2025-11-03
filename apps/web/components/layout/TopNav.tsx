@@ -1,21 +1,31 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Bell, User, Menu } from 'lucide-react'
+import { Bell, User, Menu, LogOut } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
 
 interface TopNavProps {
   onMenuClick?: () => void
-  userRole?: 'buyer' | 'supplier' | null
 }
 
-export function TopNav({ onMenuClick, userRole = null }: TopNavProps) {
+export function TopNav({ onMenuClick }: TopNavProps) {
+  const { user, profile, signOut } = useAuth()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await signOut()
+    router.push('/login')
+    router.refresh()
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Left: Logo + Menu Button */}
         <div className="flex items-center gap-4">
-          {userRole && (
+          {profile && (
             <Button variant="ghost" size="icon" onClick={onMenuClick}>
               <Menu className="h-5 w-5" />
             </Button>
@@ -30,13 +40,24 @@ export function TopNav({ onMenuClick, userRole = null }: TopNavProps) {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
-          {userRole ? (
+          {profile ? (
             <>
+              {/* User info */}
+              <div className="hidden md:flex items-center gap-2 mr-2">
+                <div className="text-right">
+                  <p className="text-sm font-medium">{profile.org_name}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{profile.role}</p>
+                </div>
+              </div>
+              
               <Button variant="ghost" size="icon">
                 <Bell className="h-5 w-5" />
               </Button>
               <Button variant="ghost" size="icon">
                 <User className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
+                <LogOut className="h-5 w-5" />
               </Button>
             </>
           ) : (

@@ -45,7 +45,7 @@ export default function BuyerDashboardPage() {
   const recentRFQs = rfqs.slice(0, 3)
 
   return (
-    <AppShell role="buyer">
+    <AppShell>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

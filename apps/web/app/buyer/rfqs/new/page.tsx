@@ -87,7 +87,7 @@ export default function NewRFQPage() {
   }
 
   return (
-    <AppShell role="buyer">
+    <AppShell>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div>

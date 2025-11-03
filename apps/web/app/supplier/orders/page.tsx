@@ -9,7 +9,7 @@ import Link from 'next/link'
 
 export default function SupplierOrdersPage() {
   return (
-    <AppShell role="supplier">
+    <AppShell>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Orders</h1>
