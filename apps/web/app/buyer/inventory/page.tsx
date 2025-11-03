@@ -71,7 +71,7 @@ export default function BuyerInventoryPage() {
     try {
       const itemData = {
         ...formData,
-        buyer_id: user.id,
+        owner_id: user.id,
         ...(editingId && { id: editingId }),
       }
 

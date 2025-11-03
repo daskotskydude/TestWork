@@ -320,7 +320,7 @@ export async function listInventory(supabase: SupabaseClient, userId: string) {
   const { data, error } = await supabase
     .from('inventory')
     .select('*')
-    .eq('buyer_id', userId)
+    .eq('owner_id', userId)
     .order('name');
 
   if (error) throw error;
@@ -346,7 +346,7 @@ export async function getInventoryItem(supabase: SupabaseClient, itemId: string)
  */
 export async function upsertInventory(
   supabase: SupabaseClient,
-  itemData: Partial<InventoryItem> & { buyer_id: string }
+  itemData: Partial<InventoryItem> & { owner_id: string }
 ) {
   const { data, error } = await supabase
     .from('inventory')
