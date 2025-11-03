@@ -8,22 +8,27 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, ArrowRight, Plus, Trash2, Check } from 'lucide-react'
-import { useMockStore, type RFQItem } from '@/lib/mock-store'
+import { ArrowLeft, ArrowRight, Plus, Trash2, Check, Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useSupabase } from '@/../../packages/lib/useSupabase'
+import { createRFQ, updateRFQStatus } from '@/../../packages/lib/data'
+import type { RFQItem } from '@/../../packages/lib/supabaseClient'
 import { toast } from 'sonner'
 
 const STEPS = ['Details', 'Items', 'Budget', 'Review']
 
 export default function NewRFQPage() {
   const router = useRouter()
-  const { addRFQ } = useMockStore()
+  const { user } = useAuth()
+  const supabase = useSupabase()
   const [currentStep, setCurrentStep] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: '',
-    items: [{ name: '', sku: '', qty: 1, unit: 'kg', target_price: 0 }] as Omit<RFQItem, 'id' | 'rfq_id'>[],
+    items: [{ name: '', sku: '', qty: 1, unit: 'kg', target_price: 0 }] as Omit<RFQItem, 'id' | 'rfq_id' | 'created_at'>[],
     budget_min: 0,
     budget_max: 0,
   })
@@ -61,29 +66,40 @@ export default function NewRFQPage() {
     }
   }
 
-  const handleSubmit = () => {
-    const newRFQ: RFQItem[] = formData.items.map((item, idx) => ({
-      id: `item-${Date.now()}-${idx}`,
-      rfq_id: '', // will be set by addRFQ
-      ...item,
-    }))
-    
-    const rfq = {
-      id: `rfq-${Date.now()}`,
-      buyer_id: 'buyer-1',
-      title: formData.title,
-      description: formData.description,
-      category: formData.category,
-      budget_min: formData.budget_min || undefined,
-      budget_max: formData.budget_max || undefined,
-      status: 'open' as const,
-      created_at: new Date().toISOString(),
-      items: newRFQ.map(item => ({ ...item, rfq_id: `rfq-${Date.now()}` })),
+  const handleSubmit = async () => {
+    if (!user) {
+      toast.error('You must be logged in to create an RFQ')
+      return
     }
+
+    setIsSubmitting(true)
     
-    addRFQ(rfq)
-    toast.success('RFQ created successfully!')
-    router.push(`/buyer/rfqs/${rfq.id}`)
+    try {
+      // Create RFQ with items in Supabase
+      const { rfq } = await createRFQ(
+        supabase,
+        {
+          buyer_id: user.id,
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          budget_min: formData.budget_min || undefined,
+          budget_max: formData.budget_max || undefined,
+        },
+        formData.items
+      )
+
+      // Update status to 'open' so suppliers can see it
+      await updateRFQStatus(supabase, rfq.id, 'open')
+
+      toast.success('RFQ created successfully!')
+      router.push(`/buyer/rfqs/${rfq.id}`)
+    } catch (error) {
+      console.error('Failed to create RFQ:', error)
+      toast.error('Failed to create RFQ. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -338,9 +354,18 @@ export default function NewRFQPage() {
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit}>
-              <Check className="h-4 w-4 mr-2" />
-              Submit RFQ
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Submit RFQ
+                </>
+              )}
             </Button>
           )}
         </div>
