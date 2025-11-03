@@ -103,3 +103,13 @@ export type Product = {
   created_at: string
   updated_at: string
 }
+
+export type Connection = {
+  id: string
+  buyer_id: string
+  supplier_id: string
+  status: 'pending' | 'accepted' | 'rejected' | 'blocked'
+  notes?: string
+  created_at: string
+  updated_at: string
+}

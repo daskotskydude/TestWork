@@ -10,7 +10,7 @@
  */
 
 import { SupabaseClient } from '@supabase/supabase-js';
-import type { RFQ, RFQItem, Quote, Order, InventoryItem, Product, Profile } from './supabaseClient';
+import type { RFQ, RFQItem, Quote, Order, InventoryItem, Product, Profile, Connection } from './supabaseClient';
 
 // ============================================
 // PROFILES
@@ -465,4 +465,127 @@ export async function searchProducts(supabase: SupabaseClient, searchTerm: strin
 
   if (error) throw error;
   return data as Product[];
+}
+
+// ============================================
+// CONNECTIONS (Buyer-Supplier Relationships)
+// ============================================
+
+/**
+ * List all connections for a user (buyer or supplier)
+ */
+export async function listConnections(supabase: SupabaseClient, userId: string) {
+  const { data, error } = await supabase
+    .from('connections')
+    .select(`
+      *,
+      buyer:buyer_id(id, email, org_name, role),
+      supplier:supplier_id(id, email, org_name, role)
+    `)
+    .or(`buyer_id.eq.${userId},supplier_id.eq.${userId}`)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data as any[]; // TODO: Create proper joined type
+}
+
+/**
+ * Get a specific connection
+ */
+export async function getConnection(supabase: SupabaseClient, connectionId: string) {
+  const { data, error } = await supabase
+    .from('connections')
+    .select(`
+      *,
+      buyer:buyer_id(id, email, org_name, role),
+      supplier:supplier_id(id, email, org_name, role)
+    `)
+    .eq('id', connectionId)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Create a connection request from buyer to supplier
+ */
+export async function createConnection(
+  supabase: SupabaseClient,
+  data: { buyer_id: string; supplier_id: string; notes?: string }
+) {
+  const { data: connection, error } = await supabase
+    .from('connections')
+    .insert({
+      ...data,
+      status: 'pending'
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return connection as Connection;
+}
+
+/**
+ * Update connection status (accept, reject, block)
+ */
+export async function updateConnectionStatus(
+  supabase: SupabaseClient,
+  connectionId: string,
+  status: 'accepted' | 'rejected' | 'blocked'
+) {
+  const { data, error } = await supabase
+    .from('connections')
+    .update({ status })
+    .eq('id', connectionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Connection;
+}
+
+/**
+ * Delete a connection
+ */
+export async function deleteConnection(supabase: SupabaseClient, connectionId: string) {
+  const { error } = await supabase
+    .from('connections')
+    .delete()
+    .eq('id', connectionId);
+
+  if (error) throw error;
+}
+
+/**
+ * Get list of suppliers for a buyer (accepted connections only)
+ */
+export async function getConnectedSuppliers(supabase: SupabaseClient, buyerId: string) {
+  const { data, error } = await supabase
+    .from('connections')
+    .select(`
+      supplier:supplier_id(*)
+    `)
+    .eq('buyer_id', buyerId)
+    .eq('status', 'accepted');
+
+  if (error) throw error;
+  return data.map(d => d.supplier);
+}
+
+/**
+ * Get list of buyers for a supplier (accepted connections only)
+ */
+export async function getConnectedBuyers(supabase: SupabaseClient, supplierId: string) {
+  const { data, error } = await supabase
+    .from('connections')
+    .select(`
+      buyer:buyer_id(*)
+    `)
+    .eq('supplier_id', supplierId)
+    .eq('status', 'accepted');
+
+  if (error) throw error;
+  return data.map(d => d.buyer);
 }

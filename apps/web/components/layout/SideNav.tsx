@@ -12,6 +12,7 @@ import {
   Settings,
   Inbox,
   Send,
+  Users,
 } from 'lucide-react'
 
 interface SideNavProps {
@@ -24,6 +25,7 @@ const buyerLinks = [
   { href: '/buyer/rfqs', label: 'My RFQs', icon: FileText },
   { href: '/buyer/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/buyer/inventory', label: 'Inventory', icon: Package },
+  { href: '/buyer/connections', label: 'My Suppliers', icon: Users },
   { href: '/buyer/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/buyer/settings', label: 'Settings', icon: Settings },
 ]
@@ -34,6 +36,7 @@ const supplierLinks = [
   { href: '/supplier/quotes', label: 'Quotes Sent', icon: Send },
   { href: '/supplier/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/supplier/catalog', label: 'Catalog', icon: Package },
+  { href: '/supplier/connections', label: 'My Buyers', icon: Users },
   { href: '/supplier/settings', label: 'Settings', icon: Settings },
 ]
 
