@@ -3,86 +3,158 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { AlertCircle } from 'lucide-react'
 
 export default function SupplierRegisterPage() {
   const router = useRouter()
+  const { signUp } = useAuth()
   const [formData, setFormData] = useState({
     businessName: '',
     email: '',
     password: '',
     confirmPassword: '',
+    phone: '',
+    address: '',
   })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Mock registration - navigate to supplier onboarding
-    console.log('Mock supplier registration:', formData)
-    router.push('/supplier/setup?step=profile')
+    setError('')
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      await signUp(formData.email, formData.password, {
+        role: 'supplier',
+        org_name: formData.businessName,
+        phone: formData.phone || undefined,
+        address: formData.address || undefined,
+      })
+
+      router.push('/supplier/dashboard')
+      router.refresh()
+    } catch (err: any) {
+      setError(err.message || 'Failed to create account')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl">Join as Supplier</CardTitle>
-            <Badge variant="warning">⏳ Mock Only</Badge>
-          </div>
+          <CardTitle className="text-2xl">Join as Supplier</CardTitle>
           <CardDescription>
             Create an account to receive RFQs and grow your business
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm text-red-800 font-medium">Registration failed</p>
+                  <p className="text-sm text-red-600 mt-1">{error}</p>
+                </div>
+              </div>
+            )}
+
             <div>
-              <label className="text-sm font-medium mb-2 block">Business Name</label>
+              <Label htmlFor="businessName">Business Name</Label>
               <Input
+                id="businessName"
                 required
                 placeholder="Best Foods Wholesale"
                 value={formData.businessName}
                 onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                disabled={loading}
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Email</label>
+              <Label htmlFor="email">Email</Label>
               <Input
+                id="email"
                 required
                 type="email"
                 placeholder="supplier@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                disabled={loading}
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Password</label>
+              <Label htmlFor="phone">Phone (optional)</Label>
               <Input
+                id="phone"
+                type="tel"
+                placeholder="+974-5555-0200"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="address">Address (optional)</Label>
+              <Input
+                id="address"
+                placeholder="456 Industrial Ave, City, Country"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
                 required
                 type="password"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                disabled={loading}
               />
+              <p className="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Confirm Password</label>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
+                id="confirmPassword"
                 required
                 type="password"
                 placeholder="••••••••"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                disabled={loading}
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              Create Account & Continue Setup
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Creating account...' : 'Create Account'}
             </Button>
 
             <p className="text-sm text-center text-muted-foreground">
@@ -92,14 +164,6 @@ export default function SupplierRegisterPage() {
               </Link>
             </p>
           </form>
-
-          <div className="mt-6 p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800">
-            <p className="text-xs text-yellow-800 dark:text-yellow-200">
-              <strong>Phase B Mock:</strong> This form doesn't actually create accounts yet. 
-              Submitting will take you to the supplier onboarding wizard. Supabase authentication 
-              will be added in Phase C.
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

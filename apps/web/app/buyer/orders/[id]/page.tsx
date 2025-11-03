@@ -18,7 +18,7 @@ export default function OrderDetailPage() {
 
   if (!order) {
     return (
-      <AppShell role="buyer">
+      <AppShell>
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold mb-2">Order Not Found</h2>
           <p className="text-muted-foreground mb-4">This order doesn't exist or has been removed.</p>
@@ -35,7 +35,7 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <AppShell role="buyer">
+    <AppShell>
       <div className="space-y-6">
         {/* Header */}
         <div className="print:hidden">

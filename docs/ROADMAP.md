@@ -96,14 +96,15 @@ Build **all UI screens with mock/fixture data** first. This lets us:
 - [x] Add `.env.local` with Supabase credentials
 - [x] Create `packages/lib/supabaseClient.ts`
 - [x] Apply schema + RLS policies from `infra/supabase/schema.sql`
-- [ ] Create test accounts in Supabase Auth:
+- [x] Create test accounts in Supabase Auth:
   - `buyer@test.dev`
   - `supplier@test.dev`
-- [ ] Run `infra/supabase/seed.dev.sql` (replace UUIDs from test accounts)
-- [ ] Implement auth pages:
-  - Email + Magic Link + Google OAuth
-  - Profile onboarding flow (choose role: buyer/supplier)
-- [ ] Create Data Access Layer (DAL) in `packages/lib/data.ts`:
+- [x] Run `infra/supabase/seed.dev.sql` (replace UUIDs from test accounts)
+- [x] Implement auth pages:
+  - Email login + registration (buyer & supplier)
+  - Role-based redirects after login
+  - Auth context with profile management
+- [x] Create Data Access Layer (DAL) in `packages/lib/data.ts`:
   - `listRFQs(supabase)`
   - `getRFQ(supabase, id)`
   - `createRFQ(supabase, data)`
@@ -112,6 +113,10 @@ Build **all UI screens with mock/fixture data** first. This lets us:
   - `createOrder(supabase, data)`
   - `listInventory(supabase, userId)`
   - `upsertInventory(supabase, data)`
+- [x] Add auth guards:
+  - Middleware protects buyer/supplier routes
+  - Redirects unauthenticated users to login
+  - Redirects logged-in users from auth pages to dashboard
 - [ ] Replace mock state with DAL calls:
   - RFQs list → `listRFQs()`
   - RFQ detail → `getRFQ(id)` + `listQuotes(rfqId)`

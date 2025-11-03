@@ -30,7 +30,7 @@ export default function RFQDetailPage() {
 
   if (!rfq) {
     return (
-      <AppShell role="buyer">
+      <AppShell>
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold mb-2">RFQ Not Found</h2>
           <p className="text-muted-foreground mb-4">This RFQ doesn't exist or has been removed.</p>
@@ -51,7 +51,7 @@ export default function RFQDetailPage() {
   }
 
   return (
-    <AppShell role="buyer">
+    <AppShell>
       <div className="space-y-6">
         {/* Header */}
         <div>
