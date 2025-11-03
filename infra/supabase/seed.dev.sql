@@ -4,16 +4,14 @@
 
 -- ============================================
 -- INSTRUCTIONS:
--- 1. Create test accounts in Supabase Auth:
---    - buyer@test.dev (password: TestBuyer123!)
---    - supplier@test.dev (password: TestSupplier123!)
--- 2. Get their UUIDs from auth.users table
--- 3. Replace <BUYER_UUID> and <SUPPLIER_UUID> below
--- 4. Run this script in Supabase SQL Editor
+-- 1. Test accounts created in Supabase Auth ✓
+-- 2. UUIDs updated below ✓
+-- 3. Ready to run in Supabase SQL Editor
 -- ============================================
 
--- REPLACE THESE WITH ACTUAL UUIDs FROM YOUR SUPABASE AUTH USERS:
--- Example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+-- UUIDs from test accounts:
+-- Buyer: 42d79734-62be-4f37-a666-bea0a4606b90
+-- Supplier: 3d19741b-29f1-409d-b600-dc60bbd30492
 
 -- ============================================
 -- PROFILES
@@ -21,7 +19,7 @@
 INSERT INTO profiles (id, email, role, org_name, phone, address, description)
 VALUES
   (
-    '<BUYER_UUID>',  -- Replace with actual buyer UUID
+    '42d79734-62be-4f37-a666-bea0a4606b90',  -- buyer@test.dev
     'buyer@test.dev',
     'buyer',
     'Test Restaurant Group',
@@ -30,7 +28,7 @@ VALUES
     'A restaurant group testing the platform'
   ),
   (
-    '<SUPPLIER_UUID>',  -- Replace with actual supplier UUID
+    '3d19741b-29f1-409d-b600-dc60bbd30492',  -- supplier@test.dev
     'supplier@test.dev',
     'supplier',
     'Gulf Foods Trading',
@@ -46,7 +44,7 @@ INSERT INTO rfqs (id, buyer_id, title, description, category, budget_min, budget
 VALUES
   (
     '11111111-1111-1111-1111-111111111111',
-    '<BUYER_UUID>',
+    '42d79734-62be-4f37-a666-bea0a4606b90',
     'Weekly Fresh Chicken Supply',
     'Need 20kg fresh or frozen chicken breast weekly for next 3 months',
     'Meat & Poultry',
@@ -56,7 +54,7 @@ VALUES
   ),
   (
     '22222222-2222-2222-2222-222222222222',
-    '<BUYER_UUID>',
+    '42d79734-62be-4f37-a666-bea0a4606b90',
     'Basmati Rice Bulk Order',
     'Looking for 50kg of premium 1121 extra long grain basmati rice',
     'Dry Goods',
@@ -66,7 +64,7 @@ VALUES
   ),
   (
     '33333333-3333-3333-3333-333333333333',
-    '<BUYER_UUID>',
+    '42d79734-62be-4f37-a666-bea0a4606b90',
     'Fresh Vegetables - Mixed',
     'Daily fresh vegetables: tomatoes, onions, peppers, lettuce',
     'Produce',
@@ -133,7 +131,7 @@ INSERT INTO quotes (rfq_id, supplier_id, total_price, currency, lead_time_days, 
 VALUES
   (
     '11111111-1111-1111-1111-111111111111',
-    '<SUPPLIER_UUID>',
+    '3d19741b-29f1-409d-b600-dc60bbd30492',
     1100,
     'USD',
     2,
@@ -142,7 +140,7 @@ VALUES
   ),
   (
     '22222222-2222-2222-2222-222222222222',
-    '<SUPPLIER_UUID>',
+    '3d19741b-29f1-409d-b600-dc60bbd30492',
     400,
     'USD',
     3,
@@ -156,7 +154,7 @@ VALUES
 INSERT INTO inventory (owner_id, name, sku, qty, unit, reorder_level)
 VALUES
   (
-    '<BUYER_UUID>',
+    '42d79734-62be-4f37-a666-bea0a4606b90',
     'Cooking Oil 10L',
     'OIL-10L',
     2,
@@ -164,7 +162,7 @@ VALUES
     2
   ),
   (
-    '<BUYER_UUID>',
+    '42d79734-62be-4f37-a666-bea0a4606b90',
     'Disposable Gloves (100pcs)',
     'GLV-100',
     5,
@@ -172,7 +170,7 @@ VALUES
     3
   ),
   (
-    '<BUYER_UUID>',
+    '42d79734-62be-4f37-a666-bea0a4606b90',
     'Paper Towels',
     'PPR-TWL',
     1,
@@ -186,7 +184,7 @@ VALUES
 INSERT INTO products (supplier_id, name, sku, unit, price, stock, category, moq, description)
 VALUES
   (
-    '<SUPPLIER_UUID>',
+    '3d19741b-29f1-409d-b600-dc60bbd30492',
     'Chicken Breast - Fresh',
     'CHKN-BRST-F',
     'kg',
@@ -197,7 +195,7 @@ VALUES
     'Fresh boneless chicken breast, Halal certified'
   ),
   (
-    '<SUPPLIER_UUID>',
+    '3d19741b-29f1-409d-b600-dc60bbd30492',
     'Chicken Breast - Frozen',
     'CHKN-BRST-FZ',
     'kg',
@@ -208,7 +206,7 @@ VALUES
     'Frozen boneless chicken breast, Halal certified, IQF'
   ),
   (
-    '<SUPPLIER_UUID>',
+    '3d19741b-29f1-409d-b600-dc60bbd30492',
     'Basmati Rice 1121',
     'RICE-BSM-1121',
     'kg',
@@ -219,7 +217,7 @@ VALUES
     'Premium quality extra long grain basmati rice'
   ),
   (
-    '<SUPPLIER_UUID>',
+    '3d19741b-29f1-409d-b600-dc60bbd30492',
     'White Rice',
     'RICE-WHT',
     'kg',
@@ -230,7 +228,7 @@ VALUES
     'Standard white rice, polished'
   ),
   (
-    '<SUPPLIER_UUID>',
+    '3d19741b-29f1-409d-b600-dc60bbd30492',
     'Tomatoes',
     'VEG-TOM',
     'kg',
