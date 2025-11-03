@@ -1,17 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Pencil, Trash2, Package, AlertTriangle } from 'lucide-react'
-import { useMockStore, type InventoryItem } from '@/lib/mock-store'
+import { Plus, Pencil, Trash2, Package, AlertTriangle, Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useSupabase } from '@/../../packages/lib/useSupabase'
+import { listInventory, upsertInventory } from '@/../../packages/lib/data'
+import type { InventoryItem } from '@/../../packages/lib/supabaseClient'
 import { toast } from 'sonner'
 
 export default function BuyerInventoryPage() {
-  const { inventory, addInventoryItem, updateInventoryItem, deleteInventoryItem } = useMockStore()
+  const { user } = useAuth()
+  const supabase = useSupabase()
+  const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -21,6 +27,24 @@ export default function BuyerInventoryPage() {
     unit: 'kg',
     reorder_level: 0,
   })
+
+  useEffect(() => {
+    loadInventory()
+  }, [user])
+
+  async function loadInventory() {
+    if (!user) return
+
+    try {
+      const data = await listInventory(supabase, user.id)
+      setInventory(data)
+    } catch (error) {
+      console.error('Failed to load inventory:', error)
+      toast.error('Failed to load inventory')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const resetForm = () => {
     setFormData({ name: '', sku: '', qty: 0, unit: 'kg', reorder_level: 0 })
@@ -40,31 +64,60 @@ export default function BuyerInventoryPage() {
     setShowForm(true)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user) return
     
-    if (editingId) {
-      updateInventoryItem(editingId, formData)
-      toast.success('Item updated successfully')
-    } else {
-      const newItem: InventoryItem = {
-        id: `inv-${Date.now()}`,
-        owner_id: 'buyer-1',
-        created_at: new Date().toISOString(),
+    try {
+      const itemData = {
         ...formData,
+        buyer_id: user.id,
+        ...(editingId && { id: editingId }),
       }
-      addInventoryItem(newItem)
-      toast.success('Item added to inventory')
+
+      await upsertInventory(supabase, itemData)
+      
+      if (editingId) {
+        toast.success('Item updated successfully')
+      } else {
+        toast.success('Item added to inventory')
+      }
+      
+      resetForm()
+      await loadInventory()
+    } catch (error) {
+      console.error('Failed to save inventory item:', error)
+      toast.error('Failed to save item')
     }
-    
-    resetForm()
   }
 
-  const handleDelete = (id: string, name: string) => {
-    if (confirm(`Delete "${name}" from inventory?`)) {
-      deleteInventoryItem(id)
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this inventory item?')) return
+
+    try {
+      const { error } = await supabase
+        .from('inventory')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
       toast.success('Item deleted')
+      await loadInventory()
+    } catch (error) {
+      console.error('Failed to delete item:', error)
+      toast.error('Failed to delete item')
     }
+  }
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppShell>
+    )
   }
 
   const lowStockItems = inventory.filter((i) => i.qty <= i.reorder_level)
@@ -229,7 +282,7 @@ export default function BuyerInventoryPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDelete(item.id, item.name)}
+                              onClick={() => handleDelete(item.id)}
                             >
                               <Trash2 className="h-3 w-3 text-destructive" />
                             </Button>

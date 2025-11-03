@@ -1,15 +1,48 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { FileText, Package, ShoppingCart, TrendingUp, Plus } from 'lucide-react'
-import { useMockStore } from '@/lib/mock-store'
+import { useAuth } from '@/lib/auth-context'
+import { useSupabase } from '@/../../packages/lib/useSupabase'
+import { listRFQs, listOrders, listInventory } from '@/../../packages/lib/data'
+import type { RFQ, Order, InventoryItem } from '@/../../packages/lib/supabaseClient'
 
 export default function BuyerDashboardPage() {
-  const { rfqs, orders, inventory } = useMockStore()
+  const { user } = useAuth()
+  const supabase = useSupabase()
+  const [rfqs, setRfqs] = useState<RFQ[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
+  const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadData() {
+      if (!user) return
+
+      try {
+        const [rfqsData, ordersData, inventoryData] = await Promise.all([
+          listRFQs(supabase),
+          listOrders(supabase),
+          listInventory(supabase, user.id),
+        ])
+
+        setRfqs(rfqsData)
+        setOrders(ordersData)
+        setInventory(inventoryData)
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [user, supabase])
 
   const stats = [
     {
@@ -43,6 +76,16 @@ export default function BuyerDashboardPage() {
   ]
 
   const recentRFQs = rfqs.slice(0, 3)
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell>
@@ -108,7 +151,7 @@ export default function BuyerDashboardPage() {
                     <div>
                       <p className="font-medium">{rfq.title}</p>
                       <p className="text-sm text-muted-foreground">
-                        {rfq.items.length} items • Created {new Date(rfq.created_at).toLocaleDateString()}
+                        {rfq.category} • Created {new Date(rfq.created_at).toLocaleDateString()}
                       </p>
                     </div>
                     <Badge variant={rfq.status === 'open' ? 'success' : 'secondary'}>

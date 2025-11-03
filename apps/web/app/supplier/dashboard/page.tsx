@@ -1,19 +1,51 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { FileText, Send, ShoppingCart, Package } from 'lucide-react'
-import { useMockStore } from '@/lib/mock-store'
+import { useAuth } from '@/lib/auth-context'
+import { useSupabase } from '@/../../packages/lib/useSupabase'
+import { listRFQs, listProducts, listQuotesBySupplier } from '@/../../packages/lib/data'
+import type { RFQ, Product, Quote } from '@/../../packages/lib/supabaseClient'
 
 export default function SupplierDashboardPage() {
-  const { rfqs, quotes } = useMockStore()
+  const { user } = useAuth()
+  const supabase = useSupabase()
+  const [rfqs, setRfqs] = useState<RFQ[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [quotes, setQuotes] = useState<Quote[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Mock: show all RFQs to supplier (in real app, would filter by category/visibility)
-  const openRFQs = rfqs.filter((r) => r.status === 'open')
-  const myQuotes = quotes // In real app, filter by supplier_id
+  useEffect(() => {
+    async function loadData() {
+      if (!user) return
+
+      try {
+        const [rfqsData, productsData, quotesData] = await Promise.all([
+          listRFQs(supabase),
+          listProducts(supabase, user.id),
+          listQuotesBySupplier(supabase, user.id),
+        ])
+
+        setRfqs(rfqsData.filter(r => r.status === 'open'))
+        setProducts(productsData)
+        setQuotes(quotesData)
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [user, supabase])
+
+  const openRFQs = rfqs
+  const myQuotes = quotes
 
   const stats = [
     {
@@ -39,12 +71,22 @@ export default function SupplierDashboardPage() {
     },
     {
       title: 'Catalog Items',
-      value: 0, // Mock
+      value: products.length,
       icon: Package,
       color: 'text-purple-600',
       href: '/supplier/catalog',
     },
   ]
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        </div>
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell>
@@ -104,7 +146,7 @@ export default function SupplierDashboardPage() {
                   <p className="text-sm text-muted-foreground mb-2">{rfq.description}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
-                      {rfq.items.length} items • {rfq.category}
+                      {rfq.category}
                     </span>
                     <Button asChild size="sm">
                       <Link href={`/supplier/rfqs/${rfq.id}`}>Submit Quote</Link>

@@ -1,21 +1,60 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Send } from 'lucide-react'
-import { useMockStore } from '@/lib/mock-store'
+import { FileText, Send, Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useSupabase } from '@/../../packages/lib/useSupabase'
+import { listRFQs, listQuotesBySupplier } from '@/../../packages/lib/data'
+import type { RFQ, Quote } from '@/../../packages/lib/supabaseClient'
 
 export default function SupplierRFQsPage() {
-  const { rfqs, quotes } = useMockStore()
+  const { user } = useAuth()
+  const supabase = useSupabase()
+  const [rfqs, setRfqs] = useState<RFQ[]>([])
+  const [quotes, setQuotes] = useState<Quote[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Mock: show all open RFQs (in real app, would filter by supplier's capabilities/categories)
-  const openRFQs = rfqs.filter((r) => r.status === 'open')
+  useEffect(() => {
+    async function loadData() {
+      if (!user) return
+
+      try {
+        const [rfqsData, quotesData] = await Promise.all([
+          listRFQs(supabase),
+          listQuotesBySupplier(supabase, user.id),
+        ])
+
+        setRfqs(rfqsData.filter(r => r.status === 'open'))
+        setQuotes(quotesData)
+      } catch (error) {
+        console.error('Failed to load RFQs:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [user, supabase])
+
+  const openRFQs = rfqs
 
   const hasQuotedForRFQ = (rfqId: string) => {
     return quotes.some((q) => q.rfq_id === rfqId)
+  }
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppShell>
+    )
   }
 
   return (
@@ -50,7 +89,6 @@ export default function SupplierRFQsPage() {
                         {rfq.description}
                       </p>
                       <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                        <span>{rfq.items.length} items</span>
                         <span>Category: {rfq.category}</span>
                         {rfq.budget_max && (
                           <span>Budget: up to ${rfq.budget_max.toLocaleString()}</span>
@@ -61,30 +99,15 @@ export default function SupplierRFQsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm">
-                      <p className="font-medium mb-1">Items Requested:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {rfq.items.slice(0, 3).map((item) => (
-                          <Badge key={item.id} variant="outline">
-                            {item.name} ({item.qty} {item.unit})
-                          </Badge>
-                        ))}
-                        {rfq.items.length > 3 && (
-                          <Badge variant="outline">+{rfq.items.length - 3} more</Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/supplier/rfqs/${rfq.id}`}>View Details</Link>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/supplier/rfqs/${rfq.id}`}>View Details</Link>
+                    </Button>
+                    {!alreadyQuoted && (
+                      <Button asChild size="sm">
+                        <Link href={`/supplier/rfqs/${rfq.id}`}>Submit Quote</Link>
                       </Button>
-                      {!alreadyQuoted && (
-                        <Button asChild size="sm">
-                          <Link href={`/supplier/rfqs/${rfq.id}`}>Submit Quote</Link>
-                        </Button>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

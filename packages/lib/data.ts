@@ -209,6 +209,20 @@ export async function updateQuoteStatus(
   return data as Quote;
 }
 
+/**
+ * List all quotes by a supplier
+ */
+export async function listQuotesBySupplier(supabase: SupabaseClient, supplierId: string) {
+  const { data, error } = await supabase
+    .from('quotes')
+    .select('*')
+    .eq('supplier_id', supplierId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data as Quote[];
+}
+
 // ============================================
 // ORDERS
 // ============================================

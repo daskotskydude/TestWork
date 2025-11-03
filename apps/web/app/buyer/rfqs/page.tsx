@@ -1,15 +1,49 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, FileText } from 'lucide-react'
-import { useMockStore } from '@/lib/mock-store'
+import { Plus, FileText, Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useSupabase } from '@/../../packages/lib/useSupabase'
+import { listRFQs } from '@/../../packages/lib/data'
+import type { RFQ } from '@/../../packages/lib/supabaseClient'
 
 export default function BuyerRFQsPage() {
-  const { rfqs } = useMockStore()
+  const { user } = useAuth()
+  const supabase = useSupabase()
+  const [rfqs, setRfqs] = useState<RFQ[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadRFQs() {
+      if (!user) return
+
+      try {
+        const data = await listRFQs(supabase)
+        setRfqs(data)
+      } catch (error) {
+        console.error('Failed to load RFQs:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadRFQs()
+  }, [user, supabase])
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell>
@@ -48,7 +82,6 @@ export default function BuyerRFQsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                    <span>{rfq.items.length} items</span>
                     <span>Category: {rfq.category}</span>
                     {rfq.budget_max && (
                       <span>Budget: up to ${rfq.budget_max.toLocaleString()}</span>
