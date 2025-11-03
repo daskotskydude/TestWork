@@ -120,7 +120,7 @@ export default function BuyerInventoryPage() {
     )
   }
 
-  const lowStockItems = inventory.filter((i) => i.qty <= i.reorder_level)
+  const lowStockItems = inventory.filter((i) => Number(i.qty) <= Number(i.reorder_level))
 
   return (
     <AppShell>
@@ -190,8 +190,9 @@ export default function BuyerInventoryPage() {
                       required
                       type="number"
                       min="0"
+                      step="0.01"
                       value={formData.qty}
-                      onChange={(e) => setFormData({ ...formData, qty: parseFloat(e.target.value) })}
+                      onChange={(e) => setFormData({ ...formData, qty: parseFloat(e.target.value) || 0 })}
                     />
                   </div>
                   <div>
@@ -209,8 +210,9 @@ export default function BuyerInventoryPage() {
                       required
                       type="number"
                       min="0"
+                      step="0.01"
                       value={formData.reorder_level}
-                      onChange={(e) => setFormData({ ...formData, reorder_level: parseFloat(e.target.value) })}
+                      onChange={(e) => setFormData({ ...formData, reorder_level: parseFloat(e.target.value) || 0 })}
                     />
                   </div>
                 </div>
@@ -264,7 +266,7 @@ export default function BuyerInventoryPage() {
                         <td className="py-3">{item.unit}</td>
                         <td className="py-3">{item.reorder_level}</td>
                         <td className="py-3">
-                          {item.qty <= item.reorder_level ? (
+                          {Number(item.qty) <= Number(item.reorder_level) ? (
                             <Badge variant="error">Low Stock</Badge>
                           ) : (
                             <Badge variant="success">In Stock</Badge>

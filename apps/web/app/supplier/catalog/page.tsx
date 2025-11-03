@@ -151,7 +151,7 @@ export default function SupplierCatalogPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-2xl font-bold">
-                {products.filter(p => p.stock > 0).length}
+                {products.filter(p => Number(p.stock) > 0).length}
               </div>
               <p className="text-xs text-muted-foreground">In Stock</p>
             </CardContent>
@@ -159,7 +159,7 @@ export default function SupplierCatalogPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-2xl font-bold">
-                {products.filter(p => p.stock === 0).length}
+                {products.filter(p => Number(p.stock) === 0).length}
               </div>
               <p className="text-xs text-muted-foreground">Out of Stock</p>
             </CardContent>
@@ -307,7 +307,7 @@ export default function SupplierCatalogPage() {
                           ${product.price} / {product.unit}
                         </td>
                         <td className="py-4">
-                          <Badge variant={product.stock > 0 ? 'success' : 'destructive'}>
+                          <Badge variant={Number(product.stock) > 0 ? 'success' : 'destructive'}>
                             {product.stock} {product.unit}
                           </Badge>
                         </td>
