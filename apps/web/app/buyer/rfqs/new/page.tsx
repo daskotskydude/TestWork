@@ -13,6 +13,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
 import { createRFQ } from '@/../../packages/lib/data'
 import type { RFQItem } from '@/../../packages/lib/supabaseClient'
+import { generateSKU } from '@/../../packages/lib/utils'
 import { toast } from 'sonner'
 
 const STEPS = ['Details', 'Items', 'Budget', 'Review']
@@ -201,13 +202,22 @@ export default function NewRFQPage() {
                           required
                           placeholder="e.g., Organic Tomatoes"
                           value={item.name}
-                          onChange={(e) => updateItem(index, 'name', e.target.value)}
+                          onChange={(e) => {
+                            const newName = e.target.value
+                            updateItem(index, 'name', newName)
+                            // Auto-generate SKU if name changes and SKU is empty
+                            if (newName && !item.sku) {
+                              updateItem(index, 'sku', generateSKU(newName))
+                            }
+                          }}
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium mb-1 block">SKU (optional)</label>
+                        <label className="text-sm font-medium mb-1 block">
+                          SKU <span className="text-xs text-muted-foreground">(auto-generated, editable)</span>
+                        </label>
                         <Input
-                          placeholder="e.g., TOM-001"
+                          placeholder="e.g., TOM-123456"
                           value={item.sku || ''}
                           onChange={(e) => updateItem(index, 'sku', e.target.value)}
                         />

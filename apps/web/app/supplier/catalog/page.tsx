@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
 import { listProducts, bulkUpsertProducts } from '@/../../packages/lib/data'
 import type { Product } from '@/../../packages/lib/supabaseClient'
+import { generateSequentialSKU } from '@/../../packages/lib/utils'
 import { toast } from 'sonner'
 
 export default function SupplierCatalogPage() {
@@ -179,13 +180,26 @@ export default function SupplierCatalogPage() {
                     <label className="text-sm font-medium">Product Name</label>
                     <Input
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) => {
+                        const newName = e.target.value
+                        setFormData({ 
+                          ...formData, 
+                          name: newName,
+                          // Auto-generate SKU only if not editing and SKU is empty
+                          sku: !editingId && !formData.sku && newName 
+                            ? generateSequentialSKU(formData.category || newName, products)
+                            : formData.sku
+                        })
+                      }}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">SKU</label>
+                    <label className="text-sm font-medium">
+                      SKU {!editingId && <span className="text-xs text-muted-foreground">(auto-generated, editable)</span>}
+                    </label>
                     <Input
+                      placeholder="e.g., DAIRY-001"
                       value={formData.sku}
                       onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                     />
@@ -194,7 +208,17 @@ export default function SupplierCatalogPage() {
                     <label className="text-sm font-medium">Category</label>
                     <Input
                       value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      onChange={(e) => {
+                        const newCategory = e.target.value
+                        setFormData({ 
+                          ...formData, 
+                          category: newCategory,
+                          // Regenerate SKU if category changes and not editing
+                          sku: !editingId && newCategory && formData.name
+                            ? generateSequentialSKU(newCategory, products)
+                            : formData.sku
+                        })
+                      }}
                       placeholder="e.g., Dairy, Produce, Seafood"
                       required
                     />

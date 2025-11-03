@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
 import { listInventory, upsertInventory } from '@/../../packages/lib/data'
 import type { InventoryItem } from '@/../../packages/lib/supabaseClient'
+import { generateSequentialSKU } from '@/../../packages/lib/utils'
 import { toast } from 'sonner'
 
 export default function BuyerInventoryPage() {
@@ -171,13 +172,25 @@ export default function BuyerInventoryPage() {
                       required
                       placeholder="e.g., Cooking Oil 10L"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) => {
+                        const newName = e.target.value
+                        setFormData({ 
+                          ...formData, 
+                          name: newName,
+                          // Auto-generate SKU only if not editing and SKU is empty
+                          sku: !editingId && !formData.sku && newName 
+                            ? generateSequentialSKU(newName, inventory)
+                            : formData.sku
+                        })
+                      }}
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">SKU (optional)</label>
+                    <label className="text-sm font-medium mb-2 block">
+                      SKU {!editingId && <span className="text-xs text-muted-foreground">(auto-generated, editable)</span>}
+                    </label>
                     <Input
-                      placeholder="e.g., OIL-10L"
+                      placeholder="e.g., OIL-001"
                       value={formData.sku}
                       onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                     />
