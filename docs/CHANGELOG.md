@@ -8,7 +8,43 @@ The format follows [Conventional Commits](https://www.conventionalcommits.org/).
 
 ## [Unreleased]
 
-### Phase A - Documentation
+### Phase C - Supabase Wiring + Auth
+
+#### 2025-01-XX
+- **feat(supabase)**: create database schema with RLS policies
+  - Created infra/supabase/schema.sql with 8 tables (profiles, rfqs, rfq_items, quotes, orders, inventory, products)
+  - Implemented Row Level Security (RLS) policies for multi-tenant security
+  - Added indexes for performance optimization
+  - Created auto-update triggers for timestamp columns
+  - Added generate_po_number() function for order PO generation
+- **feat(supabase)**: create development seed data
+  - Created infra/supabase/seed.dev.sql with test data template
+  - Includes 2 test profiles (buyer@test.dev, supplier@test.dev)
+  - Sample data: 3 RFQs, 5 RFQ items, 2 quotes, 3 inventory items, 5 products
+- **feat(lib)**: create Supabase client libraries
+  - Created packages/lib/supabaseClient.ts with TypeScript type definitions
+  - Created packages/lib/supabaseServer.ts with server-side client utilities
+  - Created packages/lib/useSupabase.ts hook for client components
+- **feat(lib)**: create Data Access Layer (DAL)
+  - Created packages/lib/data.ts with all database operation functions
+  - Implements: listRFQs, getRFQ, createRFQ, listQuotes, createQuote, createOrder, listInventory, upsertInventory, listProducts, bulkUpsertProducts, searchProducts
+  - All functions enforce RLS policies and provide type safety
+- **chore(deps)**: install Supabase packages
+  - Added @supabase/supabase-js for client SDK
+  - Added @supabase/ssr for Next.js server-side rendering support
+- **docs**: create Supabase setup guide
+  - Created docs/SUPABASE_SETUP.md with complete setup instructions
+  - Includes step-by-step guide for project creation, schema application, test account setup, seed data loading
+  - Added troubleshooting section and security notes
+- **chore(env)**: update environment variable naming
+  - Fixed .env.local.example to use NEXT_PUBLIC_ prefix for Supabase vars
+  - Updated all client files to use correct environment variable names
+- **docs**: update ROADMAP to reflect Phase B completion
+  - Marked Phase B as complete (all 20+ UI pages implemented)
+  - Updated Phase C status to "In Progress"
+  - Checked off completed Phase C infrastructure tasks
+
+### Phase B - UI Scaffold (Mock Data)
 
 #### 2025-11-03
 - **docs**: scaffold initial documentation set

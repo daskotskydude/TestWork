@@ -28,7 +28,7 @@ ProcureLink follows a **documentation-first, UI-first, then API** approach. Each
 
 ## Phase B: UI Scaffold (Mock Data)
 **Timeline**: 3-5 days  
-**Status**: 🟡 In Progress
+**Status**: ✅ Complete
 
 ### Philosophy
 Build **all UI screens with mock/fixture data** first. This lets us:
@@ -40,34 +40,34 @@ Build **all UI screens with mock/fixture data** first. This lets us:
 **Mock state allowed**: Use in-memory state (React `useState`, Zustand, or fixtures) for data persistence until Phase C.
 
 ### Tasks
-- [ ] Scaffold Next.js app with Tailwind + shadcn/ui
-- [ ] AppShell with TopNav + SideNav (role-aware)
-- [ ] Create `/preview` route (Component Gallery for live demos)
-- [ ] Public pages: Home (`/`), How It Works, Browse Suppliers
-- [ ] Auth pages: `/buyer-register`, `/supplier-register` (mock signup)
-- [ ] **Supplier onboarding wizard**:
+- [x] Scaffold Next.js app with Tailwind + shadcn/ui
+- [x] AppShell with TopNav + SideNav (role-aware)
+- [x] Create `/preview` route (Component Gallery for live demos)
+- [x] Public pages: Home (`/`), How It Works, Browse Suppliers
+- [x] Auth pages: `/buyer-register`, `/supplier-register` (mock signup)
+- [x] **Supplier onboarding wizard**:
   - `/supplier/setup?step=profile` (logo, license upload, address)
   - `/supplier/setup?step=catalog` (CSV upload → mapping dialog → preview → publish)
-- [ ] **Supplier dashboard**:
+- [x] **Supplier dashboard**:
   - Tabs: Overview, RFQs Inbox, Quotes Sent, Orders, Catalog, Settings
   - Mock RFQs list with "Quote" button → QuoteModal
-- [ ] **Buyer RFQ wizard**:
+- [x] **Buyer RFQ wizard**:
   - `/buyer/rfqs/new` (4-step: Details → Items → Budget → Review)
   - Submit creates in-memory RFQ, navigates to detail page
-- [ ] **Buyer RFQ detail**:
+- [x] **Buyer RFQ detail**:
   - `/buyer/rfqs/[id]` shows RFQ header, items, quotes list
   - "Accept Quote" → creates in-memory order, navigates to `/buyer/orders/[id]`
-- [ ] **Buyer inventory**:
+- [x] **Buyer inventory**:
   - `/buyer/inventory` CRUD table with client-side persistence
   - Low-stock badge when `qty <= reorder_level`
-- [ ] **Buyer orders**:
+- [x] **Buyer orders**:
   - `/buyer/orders/[id]` PO summary with print button
-- [ ] **Reusable components**:
+- [x] **Reusable components**:
   - DataTable, FormStepper, QuoteModal, CsvMappingDialog, Uploader
   - KPI cards, EmptyState, StatusBadge, Skeleton loaders, Toast
   - Breadcrumbs, ComingSoonBadge
-- [ ] Basic route guards (mock: redirect unauthenticated users)
-- [ ] Polish: empty states, loading skeletons, toasts, responsive design
+- [x] Basic route guards (mock: redirect unauthenticated users)
+- [x] Polish: empty states, loading skeletons, toasts, responsive design
 
 ### Acceptance Criteria
 - Full navigation between all routes without backend
@@ -83,7 +83,7 @@ Build **all UI screens with mock/fixture data** first. This lets us:
 
 ## Phase C: Supabase Wiring + Auth
 **Timeline**: 3-4 days  
-**Status**: ⏳ Coming Soon
+**Status**: 🟡 In Progress
 
 ### Philosophy
 **"Real data from day 1"** - Wire Supabase immediately, but use DEV seeds to prefill data.
@@ -93,9 +93,9 @@ Build **all UI screens with mock/fixture data** first. This lets us:
 - **PROD**: Supabase project #2 (clean, real users only)
 
 ### Tasks
-- [ ] Add `.env.local` with Supabase credentials
-- [ ] Create `packages/lib/supabaseClient.ts`
-- [ ] Apply schema + RLS policies from `infra/supabase/schema.sql`
+- [x] Add `.env.local` with Supabase credentials
+- [x] Create `packages/lib/supabaseClient.ts`
+- [x] Apply schema + RLS policies from `infra/supabase/schema.sql`
 - [ ] Create test accounts in Supabase Auth:
   - `buyer@test.dev`
   - `supplier@test.dev`
