@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, ArrowRight, Plus, Trash2, Check, Loader2 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
-import { createRFQ, updateRFQStatus } from '@/../../packages/lib/data'
+import { createRFQ } from '@/../../packages/lib/data'
 import type { RFQItem } from '@/../../packages/lib/supabaseClient'
 import { toast } from 'sonner'
 
@@ -75,7 +75,7 @@ export default function NewRFQPage() {
     setIsSubmitting(true)
     
     try {
-      // Create RFQ with items in Supabase
+      // Create RFQ with items in Supabase (already set to 'open' status)
       const { rfq } = await createRFQ(
         supabase,
         {
@@ -88,9 +88,6 @@ export default function NewRFQPage() {
         },
         formData.items
       )
-
-      // Update status to 'open' so suppliers can see it
-      await updateRFQStatus(supabase, rfq.id, 'open')
 
       toast.success('RFQ created successfully!')
       router.push(`/buyer/rfqs/${rfq.id}`)

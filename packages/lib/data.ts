@@ -84,7 +84,7 @@ export async function createRFQ(
     .from('rfqs')
     .insert({
       ...rfqData,
-      status: 'draft'
+      status: 'open'
     })
     .select()
     .single();
@@ -113,7 +113,7 @@ export async function createRFQ(
 export async function updateRFQStatus(
   supabase: SupabaseClient,
   rfqId: string,
-  status: 'draft' | 'open' | 'closed' | 'awarded'
+  status: 'open' | 'closed'
 ) {
   const { data, error } = await supabase
     .from('rfqs')
