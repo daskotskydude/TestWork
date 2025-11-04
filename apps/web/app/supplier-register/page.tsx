@@ -89,6 +89,8 @@ export default function SupplierRegisterPage() {
               <Label htmlFor="businessName">Business Name</Label>
               <Input
                 id="businessName"
+                name="businessName"
+                autoComplete="organization"
                 required
                 placeholder="Best Foods Wholesale"
                 value={formData.businessName}
@@ -101,6 +103,8 @@ export default function SupplierRegisterPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
+                autoComplete="email"
                 required
                 type="email"
                 placeholder="supplier@example.com"
@@ -114,6 +118,8 @@ export default function SupplierRegisterPage() {
               <Label htmlFor="phone">Phone (optional)</Label>
               <Input
                 id="phone"
+                name="phone"
+                autoComplete="tel"
                 type="tel"
                 placeholder="+974-5555-0200"
                 value={formData.phone}
@@ -126,6 +132,8 @@ export default function SupplierRegisterPage() {
               <Label htmlFor="address">Address (optional)</Label>
               <Input
                 id="address"
+                name="address"
+                autoComplete="street-address"
                 placeholder="456 Industrial Ave, City, Country"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -137,6 +145,8 @@ export default function SupplierRegisterPage() {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
+                autoComplete="new-password"
                 required
                 type="password"
                 placeholder="••••••••"
@@ -151,6 +161,8 @@ export default function SupplierRegisterPage() {
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
                 id="confirmPassword"
+                name="confirmPassword"
+                autoComplete="new-password"
                 required
                 type="password"
                 placeholder="••••••••"

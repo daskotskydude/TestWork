@@ -92,8 +92,12 @@ export default function BuyerRegisterPage() {
               <Label htmlFor="businessName">Business Name</Label>
               <Input
                 id="businessName"
+                name="businessName"
+                autoComplete="organization"
                 required
                 placeholder="Acme Restaurant Group"
+                value={formData.businessName}
+                onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
                 disabled={loading}
               />
             </div>
@@ -102,6 +106,8 @@ export default function BuyerRegisterPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
+                autoComplete="email"
                 required
                 type="email"
                 placeholder="buyer@example.com"
@@ -115,6 +121,8 @@ export default function BuyerRegisterPage() {
               <Label htmlFor="phone">Phone (optional)</Label>
               <Input
                 id="phone"
+                name="phone"
+                autoComplete="tel"
                 type="tel"
                 placeholder="+1-555-0100"
                 value={formData.phone}
@@ -127,6 +135,8 @@ export default function BuyerRegisterPage() {
               <Label htmlFor="address">Address (optional)</Label>
               <Input
                 id="address"
+                name="address"
+                autoComplete="street-address"
                 placeholder="123 Main St, City, State 12345"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -138,6 +148,8 @@ export default function BuyerRegisterPage() {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
+                autoComplete="new-password"
                 required
                 type="password"
                 placeholder="••••••••"
@@ -152,6 +164,8 @@ export default function BuyerRegisterPage() {
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
                 id="confirmPassword"
+                name="confirmPassword"
+                autoComplete="new-password"
                 required
                 type="password"
                 placeholder="••••••••"
