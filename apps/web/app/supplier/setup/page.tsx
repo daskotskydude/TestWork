@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,7 +12,7 @@ import { toast } from 'sonner'
 
 const STEPS = ['Profile', 'Catalog']
 
-export default function SupplierSetupPage() {
+function SupplierSetupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const currentStepParam = searchParams?.get('step') || 'profile'
@@ -252,5 +252,13 @@ export default function SupplierSetupPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SupplierSetupPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <SupplierSetupContent />
+    </Suspense>
   )
 }
