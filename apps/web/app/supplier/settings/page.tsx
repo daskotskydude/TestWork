@@ -7,12 +7,61 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Settings as SettingsIcon, User, Building2, Bell } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { Settings as SettingsIcon, User, Building2, Bell, Save } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+
+interface NotificationSettings {
+  emailNotifications: boolean
+  newRFQAlerts: boolean
+  orderUpdates: boolean
+  quoteAccepted: boolean
+  connectionRequests: boolean
+}
 
 export default function SupplierSettingsPage() {
   const { profile } = useAuth()
+  const [notifications, setNotifications] = useState<NotificationSettings>({
+    emailNotifications: true,
+    newRFQAlerts: true,
+    orderUpdates: true,
+    quoteAccepted: true,
+    connectionRequests: true,
+  })
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('supplier-notification-settings')
+    if (saved) {
+      try {
+        setNotifications(JSON.parse(saved))
+      } catch (e) {
+        console.error('Failed to load notification settings:', e)
+      }
+    }
+  }, [])
+
+  const handleToggle = (key: keyof NotificationSettings) => {
+    setNotifications(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }))
+  }
+
+  const handleSave = () => {
+    setIsSaving(true)
+    // Save to localStorage
+    localStorage.setItem('supplier-notification-settings', JSON.stringify(notifications))
+    
+    setTimeout(() => {
+      setIsSaving(false)
+      toast.success('Notification preferences saved successfully')
+    }, 500)
+  }
 
   return (
     <AppShell>
@@ -52,9 +101,9 @@ export default function SupplierSettingsPage() {
               <Label>Description</Label>
               <Textarea value={profile?.description || 'Not set'} disabled rows={3} />
             </div>
-            <Badge variant="outline" className="mt-2">
-              Profile editing coming in Phase 2
-            </Badge>
+            <p className="text-xs text-muted-foreground mt-2">
+              Profile editing can be enabled in your Supabase dashboard
+            </p>
           </CardContent>
         </Card>
 
@@ -65,68 +114,102 @@ export default function SupplierSettingsPage() {
               <Bell className="h-5 w-5" />
               Notification Preferences
             </CardTitle>
-            <CardDescription>Manage your notification settings</CardDescription>
+            <CardDescription>Choose what notifications you want to receive</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Email Notifications</p>
+                <div className="space-y-0.5">
+                  <Label htmlFor="emailNotifications" className="font-medium">Email Notifications</Label>
                   <p className="text-sm text-muted-foreground">Receive updates via email</p>
                 </div>
-                <Badge variant="outline">Coming in Phase 2</Badge>
+                <Switch
+                  id="emailNotifications"
+                  checked={notifications.emailNotifications}
+                  onCheckedChange={() => handleToggle('emailNotifications')}
+                />
               </div>
+              
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">New RFQ Alerts</p>
+                <div className="space-y-0.5">
+                  <Label htmlFor="newRFQAlerts" className="font-medium">New RFQ Alerts</Label>
                   <p className="text-sm text-muted-foreground">Get notified of new RFQ opportunities</p>
                 </div>
-                <Badge variant="outline">Coming in Phase 2</Badge>
+                <Switch
+                  id="newRFQAlerts"
+                  checked={notifications.newRFQAlerts}
+                  onCheckedChange={() => handleToggle('newRFQAlerts')}
+                />
               </div>
+              
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Order Updates</p>
+                <div className="space-y-0.5">
+                  <Label htmlFor="orderUpdates" className="font-medium">Order Updates</Label>
                   <p className="text-sm text-muted-foreground">Receive order status updates</p>
                 </div>
-                <Badge variant="outline">Coming in Phase 2</Badge>
+                <Switch
+                  id="orderUpdates"
+                  checked={notifications.orderUpdates}
+                  onCheckedChange={() => handleToggle('orderUpdates')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="quoteAccepted" className="font-medium">Quote Accepted Alerts</Label>
+                  <p className="text-sm text-muted-foreground">When buyers accept your quotes</p>
+                </div>
+                <Switch
+                  id="quoteAccepted"
+                  checked={notifications.quoteAccepted}
+                  onCheckedChange={() => handleToggle('quoteAccepted')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="connectionRequests" className="font-medium">Connection Requests</Label>
+                  <p className="text-sm text-muted-foreground">Buyer connection requests and approvals</p>
+                </div>
+                <Switch
+                  id="connectionRequests"
+                  checked={notifications.connectionRequests}
+                  onCheckedChange={() => handleToggle('connectionRequests')}
+                />
+              </div>
+
+              <div className="pt-4 border-t">
+                <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
+                  <Save className="h-4 w-4 mr-2" />
+                  {isSaving ? 'Saving...' : 'Save Preferences'}
+                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Future Features */}
+        {/* Advanced Settings - Future */}
         <Card>
           <CardHeader>
-            <CardTitle>Phase 2 Features</CardTitle>
-            <CardDescription>Additional settings coming soon</CardDescription>
+            <CardTitle>Advanced Settings</CardTitle>
+            <CardDescription>Additional configuration options</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <h4 className="font-semibold mb-2">Account Management</h4>
+                <h4 className="font-semibold mb-2">Account Security</h4>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                   <li>• Change password</li>
                   <li>• Two-factor authentication</li>
                   <li>• Session management</li>
-                  <li>• Account deletion</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Business Settings</h4>
+                <h4 className="font-semibold mb-2">Business Configuration</h4>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                   <li>• Payment methods</li>
                   <li>• Tax information</li>
                   <li>• Delivery zones</li>
-                  <li>• Operating hours</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Preferences</h4>
-                <ul className="space-y-1 text-muted-foreground">
-                  <li>• RFQ categories</li>
-                  <li>• Auto-response rules</li>
-                  <li>• Quote templates</li>
-                  <li>• Language & timezone</li>
                 </ul>
               </div>
             </div>
