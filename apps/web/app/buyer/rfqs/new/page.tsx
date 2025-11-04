@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Turnstile } from '@marsidev/react-turnstile'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,6 +25,7 @@ export default function NewRFQPage() {
   const supabase = useSupabase()
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
   
   const [formData, setFormData] = useState({
     title: '',
@@ -70,6 +72,11 @@ export default function NewRFQPage() {
   const handleSubmit = async () => {
     if (!user) {
       toast.error('You must be logged in to create an RFQ')
+      return
+    }
+
+    if (!turnstileToken) {
+      toast.error('Please complete the security check')
       return
     }
 
@@ -334,6 +341,18 @@ export default function NewRFQPage() {
                   </div>
                 )}
 
+                <div>
+                  <h3 className="font-semibold mb-2">Security Check</h3>
+                  <div className="flex justify-center py-4">
+                    <Turnstile
+                      siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                      onSuccess={(token) => setTurnstileToken(token)}
+                      onError={() => toast.error('Security verification failed. Please try again.')}
+                      onExpire={() => setTurnstileToken('')}
+                    />
+                  </div>
+                </div>
+
                 <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
                   <p className="text-sm text-green-900 dark:text-green-100">
                     ✅ Your RFQ is ready to be created! Click "Submit RFQ" to publish it.
@@ -361,7 +380,7 @@ export default function NewRFQPage() {
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
+            <Button onClick={handleSubmit} disabled={isSubmitting || !turnstileToken}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

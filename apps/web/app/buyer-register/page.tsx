@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Turnstile } from '@marsidev/react-turnstile'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,10 +24,17 @@ export default function BuyerRegisterPage() {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    // Validate Turnstile
+    if (!turnstileToken) {
+      setError('Please complete the security check')
+      return
+    }
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
@@ -153,7 +161,16 @@ export default function BuyerRegisterPage() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <div className="flex justify-center">
+              <Turnstile
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                onSuccess={(token) => setTurnstileToken(token)}
+                onError={() => setError('Security verification failed. Please try again.')}
+                onExpire={() => setTurnstileToken('')}
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={loading || !turnstileToken}>
               {loading ? 'Creating account...' : 'Create Account'}
             </Button>
 
