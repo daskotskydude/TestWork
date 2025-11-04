@@ -72,10 +72,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect logged-in users away from auth pages
-  if (user && (request.nextUrl.pathname === '/login' || 
-               request.nextUrl.pathname === '/buyer-register' ||
-               request.nextUrl.pathname === '/supplier-register')) {
+  // Redirect logged-in users away from auth pages (EXCEPT registration pages)
+  if (user && request.nextUrl.pathname === '/login') {
     // Get user profile to determine redirect
     const { data: profile } = await supabase
       .from('profiles')
