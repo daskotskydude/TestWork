@@ -125,16 +125,16 @@ export default function LoginPage() {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => router.push('/buyer-register')}
+                asChild
               >
-                Register as Buyer
+                <Link href="/buyer-register">Register as Buyer</Link>
               </Button>
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => router.push('/supplier-register')}
+                asChild
               >
-                Register as Supplier
+                <Link href="/supplier-register">Register as Supplier</Link>
               </Button>
             </div>
           </div>
