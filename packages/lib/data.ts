@@ -260,14 +260,19 @@ export async function listOrders(supabase: SupabaseClient) {
  * Get a single order
  */
 export async function getOrder(supabase: SupabaseClient, orderId: string) {
-  const { data, error } = await supabase
+  const { data, error} = await supabase
     .from('orders')
-    .select('*')
+    .select(`
+      *,
+      buyer:buyer_id(id, email, org_name, role),
+      supplier:supplier_id(id, email, org_name, role),
+      rfq:rfq_id(id, title, description, category)
+    `)
     .eq('id', orderId)
     .single();
 
   if (error) throw error;
-  return data as Order;
+  return data;
 }
 
 /**

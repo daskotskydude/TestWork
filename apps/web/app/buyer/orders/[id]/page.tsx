@@ -1,20 +1,54 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Printer, Package, DollarSign, Clock, User } from 'lucide-react'
-import { useMockStore } from '@/lib/mock-store'
+import { ArrowLeft, Printer, Package, DollarSign, Clock, User, Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useSupabase } from '@/../../packages/lib/useSupabase'
+import { getOrder } from '@/../../packages/lib/data'
+import type { Order } from '@/../../packages/lib/supabaseClient'
+import { toast } from 'sonner'
 
 export default function OrderDetailPage() {
   const params = useParams()
-  const { getOrder, getRFQ } = useMockStore()
+  const { user } = useAuth()
+  const supabase = useSupabase()
+  const [order, setOrder] = useState<Order | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const order = getOrder(params?.id as string)
-  const rfq = order ? getRFQ(order.rfq_id) : null
+  useEffect(() => {
+    loadOrder()
+  }, [params?.id, user])
+
+  async function loadOrder() {
+    if (!params?.id || !user) return
+
+    try {
+      const orderId = params.id as string
+      const orderData = await getOrder(supabase, orderId)
+      setOrder(orderData)
+    } catch (error) {
+      console.error('Failed to load order:', error)
+      toast.error('Failed to load order details')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppShell>
+    )
+  }
 
   if (!order) {
     return (
@@ -33,6 +67,11 @@ export default function OrderDetailPage() {
   const handlePrint = () => {
     window.print()
   }
+
+  // Extract nested data
+  const buyer = (order as any).buyer || { org_name: 'Unknown Buyer' }
+  const supplier = (order as any).supplier || { org_name: 'Unknown Supplier' }
+  const rfq = (order as any).rfq || null
 
   return (
     <AppShell>
@@ -78,7 +117,7 @@ export default function OrderDetailPage() {
               <p className="text-lg">PO #{order.po_number}</p>
             </div>
             <div className="text-right">
-              <p className="font-semibold text-lg">{order.buyer_name}</p>
+              <p className="font-semibold text-lg">{buyer.org_name}</p>
               <p className="text-sm text-gray-600">Buyer</p>
             </div>
           </div>
@@ -92,7 +131,7 @@ export default function OrderDetailPage() {
                 <User className="h-8 w-8 text-blue-600" />
                 <div>
                   <p className="text-sm text-muted-foreground">Supplier</p>
-                  <p className="font-semibold">{order.supplier_name}</p>
+                  <p className="font-semibold">{supplier.org_name}</p>
                 </div>
               </div>
             </CardContent>
@@ -152,7 +191,7 @@ export default function OrderDetailPage() {
                 <div className="space-y-2 text-sm">
                   <div>
                     <span className="text-muted-foreground">Organization:</span>
-                    <span className="ml-2 font-medium">{order.buyer_name}</span>
+                    <span className="ml-2 font-medium">{buyer.org_name}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Order Date:</span>
@@ -172,15 +211,15 @@ export default function OrderDetailPage() {
                 <div className="space-y-2 text-sm">
                   <div>
                     <span className="text-muted-foreground">Name:</span>
-                    <span className="ml-2 font-medium">{order.supplier_name}</span>
+                    <span className="ml-2 font-medium">{supplier.org_name}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Quote ID:</span>
-                    <span className="ml-2 font-medium">{order.quote_id}</span>
+                    <span className="ml-2 font-medium">{order.quote_id.substring(0, 8)}...</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">RFQ ID:</span>
-                    <span className="ml-2 font-medium">{order.rfq_id}</span>
+                    <span className="text-muted-foreground">RFQ:</span>
+                    <span className="ml-2 font-medium">{rfq?.title || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -188,53 +227,43 @@ export default function OrderDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Items from RFQ */}
-        {rfq && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Order Items</CardTitle>
-              <CardDescription>Products from RFQ: {rfq.title}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b text-left text-sm text-muted-foreground">
-                      <th className="pb-3 font-medium">Item Name</th>
-                      <th className="pb-3 font-medium">SKU</th>
-                      <th className="pb-3 font-medium">Quantity</th>
-                      <th className="pb-3 font-medium">Unit</th>
-                      <th className="pb-3 font-medium text-right">Target Price</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rfq.items.map((item) => (
-                      <tr key={item.id} className="border-b">
-                        <td className="py-3 font-medium">{item.name}</td>
-                        <td className="py-3 text-sm text-muted-foreground">{item.sku || '-'}</td>
-                        <td className="py-3">{item.qty}</td>
-                        <td className="py-3">{item.unit}</td>
-                        <td className="py-3 text-right">
-                          {item.target_price ? `$${item.target_price}` : '-'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="border-t-2">
-                      <td colSpan={4} className="py-3 text-right font-semibold">
-                        Total Amount:
-                      </td>
-                      <td className="py-3 text-right font-semibold text-lg">
-                        {order.currency} {order.total_price.toLocaleString()}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+        {/* Order Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Order Summary</CardTitle>
+            <CardDescription>
+              {rfq ? `From RFQ: ${rfq.title}` : 'Order details'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {rfq && (
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <h4 className="font-semibold mb-2">RFQ Details</h4>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    <strong>Category:</strong> {rfq.category}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Description:</strong> {rfq.description}
+                  </p>
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Order Value</p>
+                  <p className="text-2xl font-bold">
+                    {order.currency} {order.total_price.toLocaleString()}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Delivery</p>
+                  <p className="text-lg font-semibold">{order.lead_time_days} days</p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Payment & Delivery Info */}
         <div className="grid md:grid-cols-2 gap-6">
