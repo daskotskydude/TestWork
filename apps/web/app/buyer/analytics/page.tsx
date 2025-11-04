@@ -4,7 +4,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, TrendingUp, DollarSign, Package, Users } from 'lucide-react'
 import Link from 'next/link'
 
 export default function BuyerAnalyticsPage() {
@@ -16,18 +16,69 @@ export default function BuyerAnalyticsPage() {
           <p className="text-muted-foreground">Procurement insights and spending analysis</p>
         </div>
 
+        {/* Quick Stats Preview */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Spend</p>
+                  <h3 className="text-2xl font-bold">$0</h3>
+                </div>
+                <DollarSign className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Orders Placed</p>
+                  <h3 className="text-2xl font-bold">0</h3>
+                </div>
+                <Package className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Suppliers</p>
+                  <h3 className="text-2xl font-bold">0</h3>
+                </div>
+                <Users className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Avg. Lead Time</p>
+                  <h3 className="text-2xl font-bold">0 days</h3>
+                </div>
+                <TrendingUp className="h-8 w-8 text-orange-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Placeholder */}
         <Card>
-          <CardContent className="text-center py-12">
-            <BarChart3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">Analytics Dashboard Coming Soon</h3>
-            <Badge variant="warning" className="mb-4">⏳ Phase D Feature</Badge>
-            <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-              Advanced analytics and reporting will be available in a future phase. Track spending, 
-              supplier performance, and procurement trends.
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Advanced Analytics
+            </CardTitle>
+            <CardDescription>Detailed charts and insights coming in Phase 2</CardDescription>
+          </CardHeader>
+          <CardContent className="text-center py-8">
+            <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <p className="text-muted-foreground mb-4">
+              Charts, graphs, and trend analysis will be available once you have order history
             </p>
-            <Button asChild variant="outline">
-              <Link href="/buyer/dashboard">Back to Dashboard</Link>
-            </Button>
+            <Badge variant="outline">Enhanced analytics in Phase 2</Badge>
           </CardContent>
         </Card>
 

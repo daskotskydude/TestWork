@@ -52,7 +52,7 @@ function SupplierSetupContent() {
         <div className="text-center">
           <h1 className="text-3xl font-bold mb-2">Supplier Onboarding</h1>
           <p className="text-muted-foreground">Complete your profile to start receiving RFQs</p>
-          <Badge variant="warning" className="mt-2">⏳ Mock Only - Files not uploaded</Badge>
+          <Badge variant="outline" className="mt-2">File upload in Phase 2</Badge>
         </div>
 
         {/* Progress Steps */}

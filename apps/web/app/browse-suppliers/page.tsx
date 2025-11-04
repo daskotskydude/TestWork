@@ -86,19 +86,23 @@ export default function BrowseSuppliersPage() {
           </div>
         </section>
 
-        {/* Phase Notice */}
+        {/* Info Card */}
         <div className="max-w-4xl mx-auto">
           <Card>
             <CardContent className="text-center py-8">
-              <Badge variant="warning" className="mb-4">⏳ Phase C Feature</Badge>
-              <h3 className="text-lg font-semibold mb-2">Full Supplier Directory Coming Soon</h3>
+              <h3 className="text-lg font-semibold mb-2">Supplier Directory</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                The complete supplier directory with search, filters, and detailed profiles will be 
-                available in Phase C when Supabase is integrated.
+                Browse verified suppliers and connect with the right partners for your business. 
+                Full search and filtering capabilities available for registered buyers.
               </p>
-              <p className="text-sm text-muted-foreground">
-                Below is a preview of what the supplier listings will look like.
-              </p>
+              <div className="flex gap-2 justify-center">
+                <Button asChild>
+                  <Link href="/buyer-register">Register as Buyer</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/login">Login</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -107,7 +111,7 @@ export default function BrowseSuppliersPage() {
         <section>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Featured Suppliers</h2>
-            <p className="text-sm text-muted-foreground">{mockSuppliers.length} suppliers (mock data)</p>
+            <p className="text-sm text-muted-foreground">{mockSuppliers.length} suppliers (preview)</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -139,8 +143,8 @@ export default function BrowseSuppliersPage() {
                     <Package className="h-4 w-4" />
                     <span>{supplier.products} products</span>
                   </div>
-                  <Button className="w-full" variant="outline" disabled>
-                    View Profile (Coming Soon)
+                  <Button className="w-full" variant="outline" asChild>
+                    <Link href="/buyer-register">Connect (Register Required)</Link>
                   </Button>
                 </CardContent>
               </Card>

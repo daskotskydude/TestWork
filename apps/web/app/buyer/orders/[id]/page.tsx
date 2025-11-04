@@ -272,10 +272,14 @@ export default function OrderDetailPage() {
               <CardTitle>Payment Terms</CardTitle>
             </CardHeader>
             <CardContent>
-              <Badge variant="warning">⏳ Coming in Phase C</Badge>
+              <Badge variant="outline">Payment integration in Phase 2</Badge>
               <p className="text-sm text-muted-foreground mt-2">
-                Payment terms and methods will be configured in Phase C when Supabase is integrated.
+                Stripe Connect integration for secure payments and escrow services coming soon.
               </p>
+              <div className="mt-4 space-y-2 text-sm">
+                <p><strong>Current:</strong> Direct payment with supplier</p>
+                <p><strong>Future:</strong> Platform-managed payments with buyer protection</p>
+              </div>
             </CardContent>
           </Card>
 
