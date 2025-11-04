@@ -3,7 +3,15 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Bell, User, Menu, LogOut } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Bell, User, Menu, LogOut, Settings, Building } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
 interface TopNavProps {
@@ -22,54 +30,93 @@ export function TopNav({ onMenuClick }: TopNavProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        {/* Left: Logo + Menu Button */}
-        <div className="flex items-center gap-4">
+      <div className="flex h-16 items-center px-4 md:px-6">
+        {/* Left: Menu + Logo */}
+        <div className="flex items-center gap-3">
           {profile && (
-            <Button variant="ghost" size="icon" onClick={onMenuClick}>
+            <Button variant="ghost" size="icon" onClick={onMenuClick} className="md:mr-2">
               <Menu className="h-5 w-5" />
             </Button>
           )}
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-white font-bold text-sm">PL</span>
             </div>
-            <span className="font-bold text-lg">ProcureLink</span>
+            <span className="font-bold text-lg hidden sm:inline">ProcureLink</span>
           </Link>
         </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
           {profile ? (
             <>
-              {/* User info */}
-              <div className="hidden md:flex items-center gap-2 mr-2">
-                <div className="text-right">
-                  <p className="text-sm font-medium">{profile.org_name}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{profile.role}</p>
-                </div>
-              </div>
-              
-              <Button variant="ghost" size="icon">
-                <Bell className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
-                <LogOut className="h-5 w-5" />
-              </Button>
+              {/* Notifications Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div className="p-4 text-sm text-muted-foreground text-center">
+                    No new notifications
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Profile Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="gap-2">
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="hidden md:flex flex-col items-start">
+                      <span className="text-sm font-medium">{profile.org_name}</span>
+                      <span className="text-xs text-muted-foreground capitalize">{profile.role}</span>
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{profile.org_name}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <Building className="mr-2 h-4 w-4" />
+                    <span>Profile Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Account Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
-              <Button asChild variant="ghost">
+              <Button asChild variant="ghost" className="hidden sm:inline-flex">
                 <Link href="/buyer-register">For Buyers</Link>
               </Button>
-              <Button asChild variant="ghost">
+              <Button asChild variant="ghost" className="hidden sm:inline-flex">
                 <Link href="/supplier-register">For Suppliers</Link>
               </Button>
               <Button asChild>
-                <Link href="/preview">Component Gallery</Link>
+                <Link href="/login">Sign In</Link>
               </Button>
             </>
           )}
