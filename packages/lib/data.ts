@@ -287,10 +287,16 @@ export async function createOrder(
   supabase: SupabaseClient,
   orderData: Omit<Order, 'id' | 'po_number' | 'created_at' | 'updated_at' | 'status'>
 ) {
+  // Generate PO number: PO-YYYYMMDD-XXXXXX (e.g., PO-20231104-A3F9D2)
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const po_number = `PO-${date}-${random}`;
+
   const { data, error } = await supabase
     .from('orders')
     .insert({
       ...orderData,
+      po_number,
       status: 'created'
     })
     .select()

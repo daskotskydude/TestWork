@@ -114,6 +114,24 @@ export default function RFQDetailPage() {
     }
   }
 
+  const handleRejectQuote = async (quoteId: string) => {
+    if (!user) return
+
+    try {
+      await updateQuoteStatus(supabase, quoteId, 'rejected')
+      
+      // Update local state
+      setQuotes(quotes.map(q => 
+        q.id === quoteId ? { ...q, status: 'rejected' as const } : q
+      ))
+      
+      toast.success('Quote rejected')
+    } catch (error) {
+      console.error('Failed to reject quote:', error)
+      toast.error('Failed to reject quote. Please try again.')
+    }
+  }
+
   return (
     <AppShell>
       <div className="space-y-6">
@@ -293,7 +311,11 @@ export default function RFQDetailPage() {
                           <Check className="h-4 w-4 mr-2" />
                           Accept Quote
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleRejectQuote(quote.id)}
+                        >
                           Reject
                         </Button>
                       </div>
