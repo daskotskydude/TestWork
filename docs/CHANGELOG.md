@@ -11,6 +11,11 @@ The format follows [Conventional Commits](https://www.conventionalcommits.org/).
 ### Phase F - Production Ready (Complete ✅)
 
 #### 2025-11-04
+- **fix(auth)**: handle profile creation under Supabase RLS
+  - Store registration details in Supabase user metadata during sign up
+  - Bootstrap `profiles` rows once a session exists to avoid RLS insert errors
+  - Removed direct profile insert that failed when email confirmation is required
+
 - **chore(turnstile)**: document production Turnstile configuration
   - Clarified that Vercel deployments require NEXT_PUBLIC_TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY
   - Noted that enabling the keys removes the local/dev security bypass banner
