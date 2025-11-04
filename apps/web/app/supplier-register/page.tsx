@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Turnstile } from '@marsidev/react-turnstile'
@@ -14,6 +14,8 @@ import { AlertCircle } from 'lucide-react'
 export default function SupplierRegisterPage() {
   const router = useRouter()
   const { signUp } = useAuth()
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
+  const turnstileEnabled = Boolean(turnstileSiteKey)
   const [formData, setFormData] = useState({
     businessName: '',
     email: '',
@@ -26,11 +28,17 @@ export default function SupplierRegisterPage() {
   const [loading, setLoading] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState('')
 
+  useEffect(() => {
+    if (!turnstileEnabled) {
+      setTurnstileToken('dev-bypass')
+    }
+  }, [turnstileEnabled])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    if (!turnstileToken) {
+    if (turnstileEnabled && !turnstileToken) {
       setError('Please complete the security check')
       return
     }
@@ -172,16 +180,28 @@ export default function SupplierRegisterPage() {
               />
             </div>
 
-            <div className="flex justify-center">
-              <Turnstile
-                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-                onSuccess={(token) => setTurnstileToken(token)}
-                onError={() => setError('Security verification failed. Please try again.')}
-                onExpire={() => setTurnstileToken('')}
-              />
+            <div className="space-y-2">
+              <Label>Security Check</Label>
+              {turnstileEnabled ? (
+                <div className="flex justify-center">
+                  <Turnstile
+                    siteKey={turnstileSiteKey}
+                    onSuccess={(token) => setTurnstileToken(token)}
+                    onError={() => {
+                      setTurnstileToken('')
+                      setError('Security verification failed. Please try again.')
+                    }}
+                    onExpire={() => setTurnstileToken('')}
+                  />
+                </div>
+              ) : (
+                <div className="rounded-md border border-dashed border-gray-300 bg-gray-50 p-3 text-xs text-gray-600">
+                  Security verification is disabled in local/dev mode. It will be enabled automatically in production.
+                </div>
+              )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading || !turnstileToken}>
+            <Button type="submit" className="w-full" disabled={loading || (turnstileEnabled && !turnstileToken)}>
               {loading ? 'Creating account...' : 'Create Account'}
             </Button>
 
