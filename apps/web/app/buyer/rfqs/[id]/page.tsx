@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft, Package, DollarSign, Clock, Check, Loader2 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
-import { getRFQ, getRFQItems, listQuotes, createOrder } from '@/../../packages/lib/data'
+import { getRFQ, getRFQItems, listQuotes, createOrder, updateQuoteStatus, updateRFQStatus } from '@/../../packages/lib/data'
 import type { RFQ, RFQItem, Quote } from '@/../../packages/lib/supabaseClient'
 import { toast } from 'sonner'
 
@@ -89,6 +89,7 @@ export default function RFQDetailPage() {
       const quote = quotes.find(q => q.id === quoteId)
       if (!quote) return
 
+      // Create the order
       const order = await createOrder(supabase, {
         rfq_id: rfq.id,
         quote_id: quoteId,
@@ -98,6 +99,12 @@ export default function RFQDetailPage() {
         currency: quote.currency,
         lead_time_days: quote.lead_time_days,
       })
+
+      // Update quote status to accepted
+      await updateQuoteStatus(supabase, quoteId, 'accepted')
+
+      // Close the RFQ
+      await updateRFQStatus(supabase, rfq.id, 'closed')
 
       toast.success('Quote accepted! Order created.')
       router.push(`/buyer/orders/${order.id}`)

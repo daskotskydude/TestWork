@@ -291,7 +291,7 @@ export async function createOrder(
     .from('orders')
     .insert({
       ...orderData,
-      status: 'pending'
+      status: 'created'
     })
     .select()
     .single();
