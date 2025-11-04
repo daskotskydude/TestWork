@@ -59,14 +59,14 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protect buyer routes
-  if (request.nextUrl.pathname.startsWith('/buyer')) {
+  if (request.nextUrl.pathname.startsWith('/buyer/') || request.nextUrl.pathname === '/buyer') {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
   // Protect supplier routes
-  if (request.nextUrl.pathname.startsWith('/supplier')) {
+  if (request.nextUrl.pathname.startsWith('/supplier/') || request.nextUrl.pathname === '/supplier') {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
