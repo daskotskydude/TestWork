@@ -11,6 +11,10 @@ The format follows [Conventional Commits](https://www.conventionalcommits.org/).
 ### Phase F - Production Ready (Complete ✅)
 
 #### 2025-11-04
+- **chore(turnstile)**: document production Turnstile configuration
+  - Clarified that Vercel deployments require NEXT_PUBLIC_TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY
+  - Noted that enabling the keys removes the local/dev security bypass banner
+
 - **docs(roadmap)**: mark all MVP phases complete
   - Updated ROADMAP.md to reflect completion of Phases A-F
   - All core features implemented and tested
