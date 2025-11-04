@@ -4,28 +4,68 @@
 
 One platform to request, quote, order, and track stock for restaurants, hotels, construction SMEs, and wholesalers.
 
+**✅ MVP Complete** - All core features implemented and ready for production deployment!
+
 ---
 
 ## 🚀 Quick Start
 
-### Phase B: UI-Only Mode (No Backend Required)
+### Local Development
 
 ```powershell
-# 1. Install dependencies
-cd apps\web
+# 1. Clone and install dependencies
+git clone https://github.com/yourusername/procurelink.git
+cd procurelink
 npm install
 
-# 2. Start dev server
+# 2. Set up environment variables
+cd apps\web
+copy .env.local.example .env.local
+# Edit .env.local with your Supabase credentials
+
+# 3. Start dev server
 npm run dev
 
-# 3. Open in browser
-# http://localhost:3000 (home + build status)
-# http://localhost:3000/preview (component gallery)
+# 4. Open in browser
+# http://localhost:3000
 ```
 
-**What you'll see**: Fully functional UI with mock data, perfect for demos and frontend development.
+### Production Build
 
-📖 **Detailed setup**: See [`INSTALL.md`](./INSTALL.md)
+```powershell
+cd apps\web
+npm run build   # Build for production
+npm run start   # Test production build locally
+```
+
+📖 **Production Deployment**: See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for full deployment guide
+
+---
+
+## ✨ Features
+
+### For Buyers (Restaurants, Hotels, SMEs)
+- 🛒 Create RFQs with multiple line items
+- 📊 Compare quotes from multiple suppliers
+- 📦 Accept quotes and create purchase orders
+- 📈 Track inventory with low-stock alerts
+- 🔗 Build connections with trusted suppliers
+- 📱 Real-time order status updates
+
+### For Suppliers (Wholesalers, Distributors)
+- 📋 Browse open RFQ opportunities
+- 💰 Submit competitive quotes
+- 📦 Manage product catalog (CSV import supported)
+- ✅ Fulfill orders and update status
+- 🤝 Accept buyer connection requests
+- 📊 Dashboard with key metrics
+
+### Security & Performance
+- � Cloudflare Turnstile bot protection
+- ⚡ Rate limiting on all API endpoints
+- 🛡️ Row-Level Security (RLS) policies
+- 🔐 Email + password authentication
+- 📧 Email notification templates (ready for integration)
 
 ---
 
@@ -37,19 +77,19 @@ procurelink/
 │  └─ web/              # Next.js app (all UI + API routes)
 │     ├─ app/           # App Router pages
 │     ├─ components/    # Shared components
-│     └─ lib/           # Utilities, mock store
+│     └─ lib/           # Auth context, utilities
 ├─ packages/
-│  ├─ lib/              # Supabase client, DAL (Phase C)
-│  └─ ui/               # Shared UI components (optional)
+│  └─ lib/              # Supabase client, DAL functions, types
 ├─ infra/
-│  ├─ supabase/         # Schema, RLS policies, seeds
-│  └─ cloudflare/       # Workers config (Phase 2)
+│  └─ supabase/         # Schema, RLS policies, seeds
 └─ docs/                # Living documentation
-   ├─ README.md         # Dev commands, troubleshooting
-   ├─ ROADMAP.md        # Current phase and tasks
+   ├─ ROADMAP.md        # Development phases (all complete!)
    ├─ UX.md             # Component patterns, design system
-   ├─ DATA_MODEL.md     # ERD, RLS policies
-   ├─ SECURITY.md       # RLS patterns, auth rules
+   ├─ DATA_MODEL.md     # Database schema, RLS policies
+   ├─ SECURITY.md       # Security patterns, auth rules
+   ├─ API.md            # API endpoints and contracts
+   ├─ DEPLOYMENT.md     # Production deployment guide
+   ├─ FEATURES.md       # Complete feature list
    └─ CHANGELOG.md      # Conventional commits log
 ```
 
@@ -57,35 +97,46 @@ procurelink/
 
 ## 🛠 Tech Stack
 
-- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, shadcn/ui
-- **Backend**: Supabase (Auth, Postgres, RLS) - wired in Phase C
+- **Frontend**: Next.js 14.2 (App Router), TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Supabase (Auth, Postgres, RLS)
 - **Hosting**: Cloudflare Pages
+- **Security**: Cloudflare Turnstile, Rate Limiting
 - **Icons**: Lucide React
 - **Validation**: Zod
-- **Testing**: Vitest, Testing Library
+- **UI Library**: Radix UI primitives
+- **Notifications**: Sonner toasts
 
 ---
 
-## 📋 Current Phase
+## 📋 MVP Status - COMPLETE! 🎉
 
-**Phase B - UI Scaffold (Mock Data)**
+**Phase A - Documentation**: ✅ Complete  
+**Phase B - UI Scaffold**: ✅ Complete  
+**Phase C - Supabase + Auth**: ✅ Complete  
+**Phase D - API Routes + Validation**: ✅ Complete  
+**Phase E - Deployment Prep**: ✅ Complete  
+**Phase F - QA + Polish**: ✅ Complete  
 
-✅ **Completed**:
-- Component library (DataTable, FormStepper, QuoteModal, etc.)
-- Buyer RFQ wizard (4-step)
-- Supplier auto-onboarding with CSV catalog import
-- Inventory CRUD with low-stock alerts
-- Mock data store with localStorage persistence
-- Home page with build status panel
-- Component gallery at `/preview`
+### What's Built:
+- ✅ Full authentication flow (buyer & supplier registration/login)
+- ✅ Complete RFQ → Quote → Order → Fulfillment workflow
+- ✅ Inventory management with low-stock alerts
+- ✅ Product catalog with CSV import
+- ✅ Buyer-supplier connections system
+- ✅ Rate-limited API endpoints
+- ✅ Security features (Turnstile, RLS policies)
+- ✅ Email notification templates
+- ✅ Mobile-responsive design
+- ✅ Production build optimized (< 200KB first load JS)
 
-⏳ **Coming in Phase C**:
-- Supabase authentication (email, magic link, Google)
-- Live data persistence with RLS policies
-- Profile onboarding flow
-- Cloudflare Turnstile (bot protection)
+### Next Steps (Post-MVP):
+- 💳 Payment integration (Stripe Connect)
+- 📧 Email notifications (Resend API)
+- 📊 Analytics dashboard
+- 🌍 Multi-currency support
+- 📱 Mobile apps (React Native)
 
-See [`docs/ROADMAP.md`](./docs/ROADMAP.md) for detailed phase breakdown.
+See [`docs/ROADMAP.md`](./docs/ROADMAP.md) for detailed phase breakdown and [`FEATURES.md`](./FEATURES.md) for complete feature list.
 
 ---
 
@@ -93,11 +144,14 @@ See [`docs/ROADMAP.md`](./docs/ROADMAP.md) for detailed phase breakdown.
 
 | File | Purpose |
 |------|---------|
-| [`INSTALL.md`](./INSTALL.md) | Step-by-step setup guide |
-| [`docs/README.md`](./docs/README.md) | Developer commands, debugging, troubleshooting |
-| [`docs/ROADMAP.md`](./docs/ROADMAP.md) | Phased delivery plan, task checklist |
-| [`docs/UX.md`](./docs/UX.md) | Component patterns, design system, flows |
-| [`docs/DATA_MODEL.md`](./docs/DATA_MODEL.md) | Database schema, RLS policies |
+| [`DEPLOYMENT.md`](./DEPLOYMENT.md) | 🚀 Production deployment guide (Supabase + Cloudflare Pages) |
+| [`FEATURES.md`](./FEATURES.md) | ✨ Complete feature list and user workflows |
+| [`docs/ROADMAP.md`](./docs/ROADMAP.md) | 📅 Development phases (all complete!) |
+| [`docs/UX.md`](./docs/UX.md) | 🎨 Component patterns, design system, flows |
+| [`docs/DATA_MODEL.md`](./docs/DATA_MODEL.md) | 🗄️ Database schema, RLS policies |
+| [`docs/SECURITY.md`](./docs/SECURITY.md) | 🔒 Security patterns, auth rules |
+| [`docs/API.md`](./docs/API.md) | 🔌 API endpoints and contracts |
+| [`docs/CHANGELOG.md`](./docs/CHANGELOG.md) | 📝 Development history (conventional commits) |
 | [`docs/SECURITY.md`](./docs/SECURITY.md) | Security model, RLS patterns |
 | [`docs/API.md`](./docs/API.md) | Endpoint contracts (Phase D) |
 | [`docs/CHANGELOG.md`](./docs/CHANGELOG.md) | Conventional commits history |
