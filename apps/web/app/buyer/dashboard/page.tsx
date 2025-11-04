@@ -48,29 +48,37 @@ export default function BuyerDashboardPage() {
     {
       title: 'Active RFQs',
       value: rfqs.filter((r) => r.status === 'open').length,
+      total: rfqs.length,
       icon: FileText,
       color: 'text-blue-600',
+      bgColor: 'bg-blue-50 dark:bg-blue-950',
       href: '/buyer/rfqs',
     },
     {
-      title: 'Total Orders',
+      title: 'Active Orders',
       value: orders.filter((o) => o.status === 'created').length,
+      total: orders.length,
       icon: ShoppingCart,
       color: 'text-orange-600',
+      bgColor: 'bg-orange-50 dark:bg-orange-950',
       href: '/buyer/orders',
     },
     {
       title: 'Inventory Items',
       value: inventory.length,
+      total: inventory.length,
       icon: Package,
       color: 'text-purple-600',
+      bgColor: 'bg-purple-50 dark:bg-purple-950',
       href: '/buyer/inventory',
     },
     {
       title: 'Low Stock Alerts',
-      value: inventory.filter((i) => i.qty <= i.reorder_level).length,
+      value: inventory.filter((i) => Number(i.qty) <= Number(i.reorder_level)).length,
+      total: inventory.length,
       icon: TrendingUp,
       color: 'text-red-600',
+      bgColor: 'bg-red-50 dark:bg-red-950',
       href: '/buyer/inventory',
     },
   ]
@@ -112,12 +120,19 @@ export default function BuyerDashboardPage() {
               <Link key={stat.title} href={stat.href}>
                 <Card className="hover:shadow-md transition-shadow cursor-pointer">
                   <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
                         <p className="text-3xl font-bold mt-2">{stat.value}</p>
+                        {stat.total > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            of {stat.total} total
+                          </p>
+                        )}
                       </div>
-                      <Icon className={`h-10 w-10 ${stat.color}`} />
+                      <div className={`h-12 w-12 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
+                        <Icon className={`h-6 w-6 ${stat.color}`} />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

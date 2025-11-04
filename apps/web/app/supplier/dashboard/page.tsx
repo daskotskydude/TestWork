@@ -9,8 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { FileText, Send, ShoppingCart, Package } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
-import { listRFQs, listProducts, listQuotesBySupplier } from '@/../../packages/lib/data'
-import type { RFQ, Product, Quote } from '@/../../packages/lib/supabaseClient'
+import { listRFQs, listProducts, listQuotesBySupplier, listOrders } from '@/../../packages/lib/data'
+import type { RFQ, Product, Quote, Order } from '@/../../packages/lib/supabaseClient'
 
 export default function SupplierDashboardPage() {
   const { user } = useAuth()
@@ -18,6 +18,7 @@ export default function SupplierDashboardPage() {
   const [rfqs, setRfqs] = useState<RFQ[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [quotes, setQuotes] = useState<Quote[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -25,15 +26,17 @@ export default function SupplierDashboardPage() {
       if (!user) return
 
       try {
-        const [rfqsData, productsData, quotesData] = await Promise.all([
+        const [rfqsData, productsData, quotesData, ordersData] = await Promise.all([
           listRFQs(supabase),
           listProducts(supabase, user.id),
           listQuotesBySupplier(supabase, user.id),
+          listOrders(supabase),
         ])
 
         setRfqs(rfqsData.filter(r => r.status === 'open'))
         setProducts(productsData)
         setQuotes(quotesData)
+        setOrders(ordersData)
       } catch (error) {
         console.error('Failed to load dashboard data:', error)
       } finally {
@@ -51,29 +54,37 @@ export default function SupplierDashboardPage() {
     {
       title: 'Open RFQs',
       value: openRFQs.length,
+      subtitle: 'opportunities',
       icon: FileText,
       color: 'text-blue-600',
+      bgColor: 'bg-blue-50 dark:bg-blue-950',
       href: '/supplier/rfqs',
     },
     {
       title: 'Quotes Sent',
       value: myQuotes.length,
+      subtitle: `${myQuotes.filter(q => q.status === 'accepted').length} accepted`,
       icon: Send,
       color: 'text-green-600',
+      bgColor: 'bg-green-50 dark:bg-green-950',
       href: '/supplier/quotes',
     },
     {
       title: 'Active Orders',
-      value: 0, // Mock
+      value: orders.filter(o => o.status === 'created').length,
+      subtitle: `${orders.filter(o => o.status === 'fulfilled').length} fulfilled`,
       icon: ShoppingCart,
       color: 'text-orange-600',
+      bgColor: 'bg-orange-50 dark:bg-orange-950',
       href: '/supplier/orders',
     },
     {
       title: 'Catalog Items',
       value: products.length,
+      subtitle: `${products.filter(p => Number(p.stock) > 0).length} in stock`,
       icon: Package,
       color: 'text-purple-600',
+      bgColor: 'bg-purple-50 dark:bg-purple-950',
       href: '/supplier/catalog',
     },
   ]
@@ -105,12 +116,19 @@ export default function SupplierDashboardPage() {
               <Link key={stat.title} href={stat.href}>
                 <Card className="hover:shadow-md transition-shadow cursor-pointer">
                   <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
                         <p className="text-3xl font-bold mt-2">{stat.value}</p>
+                        {stat.subtitle && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {stat.subtitle}
+                          </p>
+                        )}
                       </div>
-                      <Icon className={`h-10 w-10 ${stat.color}`} />
+                      <div className={`h-12 w-12 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
+                        <Icon className={`h-6 w-6 ${stat.color}`} />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
