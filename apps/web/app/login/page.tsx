@@ -122,16 +122,20 @@ export default function LoginPage() {
             </div>
             
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <Link href="/buyer-register">
-                <Button variant="outline" className="w-full">
-                  Register as Buyer
-                </Button>
-              </Link>
-              <Link href="/supplier-register">
-                <Button variant="outline" className="w-full">
-                  Register as Supplier
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => router.push('/buyer-register')}
+              >
+                Register as Buyer
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => router.push('/supplier-register')}
+              >
+                Register as Supplier
+              </Button>
             </div>
           </div>
 
