@@ -301,7 +301,7 @@ export async function createOrder(
 export async function updateOrderStatus(
   supabase: SupabaseClient,
   orderId: string,
-  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
+  status: 'created' | 'fulfilled' | 'cancelled'
 ) {
   const { data, error } = await supabase
     .from('orders')
