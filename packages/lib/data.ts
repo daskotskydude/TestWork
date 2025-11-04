@@ -249,11 +249,16 @@ export async function listQuotesBySupplier(supabase: SupabaseClient, supplierId:
 export async function listOrders(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from('orders')
-    .select('*')
+    .select(`
+      *,
+      buyer:buyer_id(id, email, org_name, role),
+      supplier:supplier_id(id, email, org_name, role),
+      rfq:rfq_id(id, title, category)
+    `)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data as Order[];
+  return data;
 }
 
 /**

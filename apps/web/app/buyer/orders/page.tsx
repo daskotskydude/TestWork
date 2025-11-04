@@ -7,13 +7,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Package, Search, Loader2, Eye, CheckCircle } from 'lucide-react'
+import { Package, Search, Loader2, Eye } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
-import { listOrders, updateOrderStatus } from '@/../../packages/lib/data'
+import { listOrders } from '@/../../packages/lib/data'
+import type { Order } from '@/../../packages/lib/supabaseClient'
 import { toast } from 'sonner'
 
-export default function SupplierOrdersPage() {
+export default function BuyerOrdersPage() {
   const { user } = useAuth()
   const supabase = useSupabase()
   const [orders, setOrders] = useState<any[]>([])
@@ -21,7 +22,6 @@ export default function SupplierOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'created' | 'fulfilled' | 'cancelled'>('all')
-  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   useEffect(() => {
     loadOrders()
@@ -53,29 +53,15 @@ export default function SupplierOrdersPage() {
       filtered = filtered.filter(order => order.status === statusFilter)
     }
 
-    // Filter by search term (PO number or buyer name)
+    // Filter by search term (PO number or supplier name)
     if (searchTerm) {
       filtered = filtered.filter(order => 
         order.po_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (order.buyer?.org_name || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (order.supplier?.org_name || '').toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
     setFilteredOrders(filtered)
-  }
-
-  async function handleQuickFulfill(orderId: string) {
-    setUpdatingId(orderId)
-    try {
-      await updateOrderStatus(supabase, orderId, 'fulfilled')
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'fulfilled' } : o))
-      toast.success('Order marked as fulfilled')
-    } catch (error) {
-      console.error('Failed to update order:', error)
-      toast.error('Failed to update order status')
-    } finally {
-      setUpdatingId(null)
-    }
   }
 
   if (loading) {
@@ -93,8 +79,8 @@ export default function SupplierOrdersPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold mb-2">Orders</h1>
-          <p className="text-muted-foreground">Manage and fulfill customer orders</p>
+          <h1 className="text-3xl font-bold mb-2">My Orders</h1>
+          <p className="text-muted-foreground">View and manage your purchase orders</p>
         </div>
 
         {/* Stats */}
@@ -107,17 +93,13 @@ export default function SupplierOrdersPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-orange-600">
-                {orders.filter(o => o.status === 'created').length}
-              </div>
-              <p className="text-xs text-muted-foreground">Pending Fulfillment</p>
+              <div className="text-2xl font-bold">{orders.filter(o => o.status === 'created').length}</div>
+              <p className="text-xs text-muted-foreground">Active</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-green-600">
-                {orders.filter(o => o.status === 'fulfilled').length}
-              </div>
+              <div className="text-2xl font-bold">{orders.filter(o => o.status === 'fulfilled').length}</div>
               <p className="text-xs text-muted-foreground">Fulfilled</p>
             </CardContent>
           </Card>
@@ -126,7 +108,7 @@ export default function SupplierOrdersPage() {
               <div className="text-2xl font-bold">
                 {orders.reduce((sum, o) => sum + Number(o.total_price), 0).toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground">Total Revenue (USD)</p>
+              <p className="text-xs text-muted-foreground">Total Spent (USD)</p>
             </CardContent>
           </Card>
         </div>
@@ -141,7 +123,7 @@ export default function SupplierOrdersPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by PO number or buyer..."
+                  placeholder="Search by PO number or supplier..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9"
@@ -160,7 +142,7 @@ export default function SupplierOrdersPage() {
                   onClick={() => setStatusFilter('created')}
                   size="sm"
                 >
-                  Pending
+                  Active
                 </Button>
                 <Button
                   variant={statusFilter === 'fulfilled' ? 'default' : 'outline'}
@@ -185,7 +167,7 @@ export default function SupplierOrdersPage() {
         <Card>
           <CardHeader>
             <CardTitle>Orders ({filteredOrders.length})</CardTitle>
-            <CardDescription>Orders from your buyers</CardDescription>
+            <CardDescription>Your purchase orders from suppliers</CardDescription>
           </CardHeader>
           <CardContent>
             {filteredOrders.length === 0 ? (
@@ -194,12 +176,12 @@ export default function SupplierOrdersPage() {
                 <h3 className="text-lg font-semibold mb-2">No orders found</h3>
                 <p className="text-muted-foreground mb-4">
                   {orders.length === 0 
-                    ? "You haven't received any orders yet. Keep submitting quotes!" 
+                    ? "You haven't placed any orders yet." 
                     : "No orders match your filters."}
                 </p>
                 {orders.length === 0 && (
                   <Button asChild>
-                    <Link href="/supplier/rfqs">Browse RFQs</Link>
+                    <Link href="/buyer/rfqs/new">Create Your First RFQ</Link>
                   </Button>
                 )}
               </div>
@@ -209,7 +191,7 @@ export default function SupplierOrdersPage() {
                   <thead>
                     <tr className="border-b text-left text-sm text-muted-foreground">
                       <th className="pb-3 font-medium">PO Number</th>
-                      <th className="pb-3 font-medium">Buyer</th>
+                      <th className="pb-3 font-medium">Supplier</th>
                       <th className="pb-3 font-medium">Date</th>
                       <th className="pb-3 font-medium">Total</th>
                       <th className="pb-3 font-medium">Status</th>
@@ -220,7 +202,7 @@ export default function SupplierOrdersPage() {
                     {filteredOrders.map((order) => (
                       <tr key={order.id} className="border-b hover:bg-accent/50">
                         <td className="py-3 font-medium">{order.po_number}</td>
-                        <td className="py-3">{order.buyer?.org_name || 'Unknown'}</td>
+                        <td className="py-3">{order.supplier?.org_name || 'Unknown'}</td>
                         <td className="py-3 text-sm text-muted-foreground">
                           {new Date(order.created_at).toLocaleDateString()}
                         </td>
@@ -241,31 +223,12 @@ export default function SupplierOrdersPage() {
                           </Badge>
                         </td>
                         <td className="py-3">
-                          <div className="flex gap-2">
-                            <Button asChild variant="ghost" size="sm">
-                              <Link href={`/supplier/orders/${order.id}`}>
-                                <Eye className="h-4 w-4 mr-1" />
-                                View
-                              </Link>
-                            </Button>
-                            {order.status === 'created' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleQuickFulfill(order.id)}
-                                disabled={updatingId === order.id}
-                              >
-                                {updatingId === order.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <CheckCircle className="h-4 w-4 mr-1" />
-                                    Fulfill
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                          </div>
+                          <Button asChild variant="ghost" size="sm">
+                            <Link href={`/buyer/orders/${order.id}`}>
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Link>
+                          </Button>
                         </td>
                       </tr>
                     ))}
