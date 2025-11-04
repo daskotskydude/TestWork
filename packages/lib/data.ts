@@ -195,7 +195,7 @@ export async function createQuote(
     .from('quotes')
     .insert({
       ...quoteData,
-      status: 'pending'
+      status: 'sent'
     })
     .select()
     .single();
@@ -210,7 +210,7 @@ export async function createQuote(
 export async function updateQuoteStatus(
   supabase: SupabaseClient,
   quoteId: string,
-  status: 'pending' | 'accepted' | 'rejected'
+  status: 'sent' | 'accepted' | 'rejected'
 ) {
   const { data, error } = await supabase
     .from('quotes')
