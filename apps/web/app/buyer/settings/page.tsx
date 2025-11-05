@@ -69,6 +69,9 @@ export default function BuyerSettingsPage() {
     setIsSaving(true)
     // Save to localStorage
     localStorage.setItem('buyer-notification-settings', JSON.stringify(notifications))
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('procurelink:notification-preferences-updated'))
+    }
     
     setTimeout(() => {
       setIsSaving(false)

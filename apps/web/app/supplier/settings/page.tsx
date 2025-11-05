@@ -70,6 +70,9 @@ export default function SupplierSettingsPage() {
     setIsSaving(true)
     // Save to localStorage
     localStorage.setItem('supplier-notification-settings', JSON.stringify(notifications))
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('procurelink:notification-preferences-updated'))
+    }
     
     setTimeout(() => {
       setIsSaving(false)
