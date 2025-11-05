@@ -21,6 +21,9 @@ export default function DebugPage() {
   }, [])
 
   const testRFQQuery = async () => {
+    // Check session first
+    const { data: { session } } = await supabase.auth.getSession()
+    
     // First check auth
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     
@@ -38,6 +41,9 @@ export default function DebugPage() {
       .order('created_at', { ascending: false })
     
     setRfqCheck({ 
+      hasSession: !!session,
+      sessionUser: session?.user?.id,
+      accessToken: session?.access_token ? 'present' : 'missing',
       currentUserId: currentUser?.id,
       currentProfile: profileData,
       data, 
