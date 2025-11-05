@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
 import { listRFQs, listProducts, listQuotesBySupplier, listOrders } from '@/../../packages/lib/data'
 import type { RFQ, Product, Quote, Order } from '@/../../packages/lib/supabaseClient'
+import { RoleIndicator } from '@/components/theme/RoleIndicator'
 
 export default function SupplierDashboardPage() {
   const { user, profile } = useAuth()
@@ -103,8 +104,11 @@ export default function SupplierDashboardPage() {
     <AppShell>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Supplier Dashboard</h1>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">Supplier Dashboard</h1>
+            <RoleIndicator role="supplier" />
+          </div>
           <p className="text-muted-foreground">Manage RFQs, quotes, and orders</p>
         </div>
 
@@ -232,14 +236,6 @@ export default function SupplierDashboardPage() {
             )}
           </CardContent>
         </Card>
-
-        {/* Mock Data Notice */}
-        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <p className="text-sm text-blue-900 dark:text-blue-100">
-            <strong>📍 Phase B:</strong> All data shown is mock/local data. Your changes are 
-            saved in browser localStorage. Phase C will add Supabase for real persistence.
-          </p>
-        </div>
       </div>
     </AppShell>
   )

@@ -4,6 +4,7 @@ import './globals.css'
 import { Toaster } from 'sonner'
 import { AuthProvider } from '@/lib/auth-context'
 import { NotificationsProvider } from '@/lib/notifications-context'
+import { RoleThemeProvider } from '@/components/theme/RoleThemeProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -38,10 +39,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <NotificationsProvider>
-            {children}
-            <Toaster position="bottom-right" />
-          </NotificationsProvider>
+          <RoleThemeProvider>
+            <NotificationsProvider>
+              {children}
+              <Toaster position="bottom-right" />
+            </NotificationsProvider>
+          </RoleThemeProvider>
         </AuthProvider>
       </body>
     </html>
