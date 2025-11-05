@@ -153,13 +153,17 @@ export function TopNav({ onMenuClick }: TopNavProps) {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Building className="mr-2 h-4 w-4" />
-                    <span>Profile Settings</span>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${profile.role}/settings`}>
+                      <Building className="mr-2 h-4 w-4" />
+                      <span>Profile Settings</span>
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Account Settings</span>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${profile.role}/settings`}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Account Settings</span>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600">
