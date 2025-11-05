@@ -6,13 +6,100 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Send } from 'lucide-react'
-import { useMockStore } from '@/lib/mock-store'
+import { useAuth } from '@/lib/auth-context'
+import { useSupabase } from '@/../../packages/lib/useSupabase'
+import { useState, useEffect } from 'react'
+
+interface Quote {
+  id: string
+  rfq_id: string
+  supplier_id: string
+  total_price: number
+  currency: string
+  lead_time_days: number
+  notes: string | null
+  status: 'sent' | 'accepted' | 'rejected'
+  created_at: string
+  updated_at: string
+}
+
+interface RFQ {
+  id: string
+  title: string
+  description: string
+}
 
 export default function SupplierQuotesPage() {
-  const { quotes, rfqs } = useMockStore()
+  const { user, profile } = useAuth()
+  const supabase = useSupabase()
+  const [quotes, setQuotes] = useState<Quote[]>([])
+  const [rfqMap, setRfqMap] = useState<Record<string, RFQ>>({})
+  const [loading, setLoading] = useState(true)
 
-  // Mock: in real app, filter by supplier_id
+  useEffect(() => {
+    async function fetchQuotes() {
+      if (!user?.id) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        const { data: quotesData, error: quotesError } = await supabase
+          .from('quotes')
+          .select('*')
+          .eq('supplier_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (quotesError) throw quotesError
+
+        const quotes = (quotesData || []) as Quote[]
+        setQuotes(quotes)
+
+        // Fetch associated RFQs
+        const rfqIds = [...new Set(quotes.map(q => q.rfq_id))]
+        if (rfqIds.length > 0) {
+          const { data: rfqsData, error: rfqsError } = await supabase
+            .from('rfqs')
+            .select('id, title, description')
+            .in('id', rfqIds)
+
+          if (rfqsError) throw rfqsError
+
+          const map: Record<string, RFQ> = {}
+          ;(rfqsData || []).forEach((rfq: any) => {
+            map[rfq.id] = rfq
+          })
+          setRfqMap(map)
+        }
+      } catch (error) {
+        console.error('Failed to fetch quotes:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchQuotes()
+  }, [user, supabase])
+
   const myQuotes = quotes
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold">Quotes Sent</h1>
+            <p className="text-muted-foreground">Track your submitted quotes and their status</p>
+          </div>
+          <Card>
+            <CardContent className="text-center py-12">
+              <p className="text-muted-foreground">Loading quotes...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell>
@@ -26,7 +113,7 @@ export default function SupplierQuotesPage() {
         {/* Quotes List */}
         <div className="space-y-3">
           {myQuotes.map((quote) => {
-            const rfq = rfqs.find((r) => r.id === quote.rfq_id)
+            const rfq = rfqMap[quote.rfq_id]
 
             return (
               <Card key={quote.id} className="hover:shadow-md transition-shadow">
