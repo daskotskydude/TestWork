@@ -16,6 +16,7 @@ The format follows [Conventional Commits](https://www.conventionalcommits.org/).
   - Buyer UI now explicitly filters by `buyer_id`
   - Supplier UI only shows open RFQs
   - Added SQL utilities to validate Supabase RLS configuration
+  - Deferred data fetching until profile context loads to avoid unfiltered initial queries
 
 - **feat(settings)**: add profile editing to buyer and supplier settings
   - Implemented edit mode with phone, address, and description fields

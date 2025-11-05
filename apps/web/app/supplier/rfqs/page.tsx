@@ -21,7 +21,7 @@ export default function SupplierRFQsPage() {
 
   useEffect(() => {
     async function loadData() {
-      if (!user) return
+      if (!user || !profile?.role) return
 
       try {
         const [rfqsData, quotesData] = await Promise.all([
@@ -39,7 +39,7 @@ export default function SupplierRFQsPage() {
     }
 
     loadData()
-  }, [user, supabase])
+  }, [user, profile?.role, supabase])
 
   const openRFQs = rfqs
 

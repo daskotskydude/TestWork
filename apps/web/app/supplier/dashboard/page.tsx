@@ -23,7 +23,7 @@ export default function SupplierDashboardPage() {
 
   useEffect(() => {
     async function loadData() {
-      if (!user) return
+      if (!user || !profile?.role) return
 
       try {
         const [rfqsData, productsData, quotesData, ordersData] = await Promise.all([
@@ -45,7 +45,7 @@ export default function SupplierDashboardPage() {
     }
 
     loadData()
-  }, [user, supabase])
+  }, [user, profile?.role, supabase])
 
   const openRFQs = rfqs
   const myQuotes = quotes

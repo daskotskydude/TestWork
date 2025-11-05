@@ -22,7 +22,7 @@ export default function BuyerDashboardPage() {
 
   useEffect(() => {
     async function loadData() {
-      if (!user) return
+      if (!user || !profile?.id) return
 
       try {
         const [rfqsData, ordersData, inventoryData] = await Promise.all([
@@ -42,7 +42,7 @@ export default function BuyerDashboardPage() {
     }
 
     loadData()
-  }, [user, supabase])
+  }, [user, profile?.id, profile?.role, supabase])
 
   const stats = [
     {

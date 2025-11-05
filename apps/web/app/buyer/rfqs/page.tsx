@@ -19,8 +19,8 @@ export default function BuyerRFQsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function loadRFQs() {
-      if (!user) return
+      async function loadData() {
+        if (!user || !profile?.id) return
 
       try {
   const data = await listRFQs(supabase, { buyerId: profile?.id, role: profile?.role })
@@ -32,8 +32,8 @@ export default function BuyerRFQsPage() {
       }
     }
 
-    loadRFQs()
-  }, [user, supabase])
+      loadData()
+    }, [user, profile?.id, profile?.role, supabase])
 
   if (loading) {
     return (
