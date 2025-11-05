@@ -11,6 +11,12 @@ The format follows [Conventional Commits](https://www.conventionalcommits.org/).
 ### Phase F - Production Ready (Complete ✅)
 
 #### 2025-11-04
+- **fix(rfqs)**: filter RFQ lists by role while debugging RLS
+  - Extended `listRFQs` to accept buyer/supplier options
+  - Buyer UI now explicitly filters by `buyer_id`
+  - Supplier UI only shows open RFQs
+  - Added SQL utilities to validate Supabase RLS configuration
+
 - **feat(settings)**: add profile editing to buyer and supplier settings
   - Implemented edit mode with phone, address, and description fields
   - Profile updates save to Supabase and refresh automatically

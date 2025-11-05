@@ -47,11 +47,22 @@ export async function upsertProfile(supabase: SupabaseClient, profile: Partial<P
  * - Buyers see their own RFQs
  * - Suppliers see all open RFQs
  */
-export async function listRFQs(supabase: SupabaseClient) {
-  const { data, error } = await supabase
+export async function listRFQs(
+  supabase: SupabaseClient,
+  options?: { buyerId?: string; role?: 'buyer' | 'supplier' }
+) {
+  let query = supabase
     .from('rfqs')
     .select('*, rfq_items(*)')
     .order('created_at', { ascending: false });
+
+  if (options?.role === 'buyer' && options?.buyerId) {
+    query = query.eq('buyer_id', options.buyerId);
+  } else if (options?.role === 'supplier') {
+    query = query.eq('status', 'open');
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return data as (RFQ & { rfq_items: RFQItem[] })[];

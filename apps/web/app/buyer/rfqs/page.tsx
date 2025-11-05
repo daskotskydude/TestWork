@@ -13,7 +13,7 @@ import { listRFQs } from '@/../../packages/lib/data'
 import type { RFQ } from '@/../../packages/lib/supabaseClient'
 
 export default function BuyerRFQsPage() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const supabase = useSupabase()
   const [rfqs, setRfqs] = useState<RFQ[]>([])
   const [loading, setLoading] = useState(true)
@@ -23,7 +23,7 @@ export default function BuyerRFQsPage() {
       if (!user) return
 
       try {
-        const data = await listRFQs(supabase)
+  const data = await listRFQs(supabase, { buyerId: profile?.id, role: profile?.role })
         setRfqs(data)
       } catch (error) {
         console.error('Failed to load RFQs:', error)

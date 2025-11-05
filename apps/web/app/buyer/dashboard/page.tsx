@@ -13,7 +13,7 @@ import { listRFQs, listOrders, listInventory } from '@/../../packages/lib/data'
 import type { RFQ, Order, InventoryItem } from '@/../../packages/lib/supabaseClient'
 
 export default function BuyerDashboardPage() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const supabase = useSupabase()
   const [rfqs, setRfqs] = useState<RFQ[]>([])
   const [orders, setOrders] = useState<Order[]>([])
@@ -26,7 +26,7 @@ export default function BuyerDashboardPage() {
 
       try {
         const [rfqsData, ordersData, inventoryData] = await Promise.all([
-          listRFQs(supabase),
+          listRFQs(supabase, { buyerId: profile?.id, role: profile?.role }),
           listOrders(supabase),
           listInventory(supabase, user.id),
         ])

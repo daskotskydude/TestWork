@@ -13,7 +13,7 @@ import { listRFQs, listQuotesBySupplier } from '@/../../packages/lib/data'
 import type { RFQ, Quote } from '@/../../packages/lib/supabaseClient'
 
 export default function SupplierRFQsPage() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const supabase = useSupabase()
   const [rfqs, setRfqs] = useState<RFQ[]>([])
   const [quotes, setQuotes] = useState<Quote[]>([])
@@ -25,7 +25,7 @@ export default function SupplierRFQsPage() {
 
       try {
         const [rfqsData, quotesData] = await Promise.all([
-          listRFQs(supabase),
+          listRFQs(supabase, { role: profile?.role }),
           listQuotesBySupplier(supabase, user.id),
         ])
 
