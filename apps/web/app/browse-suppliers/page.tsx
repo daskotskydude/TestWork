@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Search, MapPin, Star, Package, Building2, Mail, Phone } from 'lucide-react'
+import { Search, MapPin, Star, Package, Building2, Mail, Phone, ChevronDown, ChevronUp } from 'lucide-react'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
 import { useAuth } from '@/lib/auth-context'
-import type { Profile } from '@/../../packages/lib/supabaseClient'
+import type { Profile, Product } from '@/../../packages/lib/supabaseClient'
 
 interface SupplierWithStats extends Profile {
   product_count: number
+  products?: Product[]
+  showProducts?: boolean
 }
 
 export default function BrowseSuppliersPage() {
@@ -40,7 +42,7 @@ export default function BrowseSuppliersPage() {
             const { count } = await supabase
               .from('products')
               .select('*', { count: 'exact', head: true })
-              .eq('supplier_id', profile.user_id)
+              .eq('supplier_id', profile.id)
 
             return {
               ...profile,
@@ -59,6 +61,57 @@ export default function BrowseSuppliersPage() {
 
     loadSuppliers()
   }, [supabase])
+
+  // Load products for a specific supplier
+  const loadSupplierProducts = async (supplierId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('supplier_id', supplierId)
+        .order('category')
+        .limit(5) // Show first 5 products
+
+      if (error) throw error
+
+      // Update the supplier in the list with their products
+      setSuppliers(prev =>
+        prev.map(s =>
+          s.id === supplierId
+            ? { ...s, products: data || [], showProducts: true }
+            : s
+        )
+      )
+    } catch (error) {
+      console.error('Failed to load products:', error)
+    }
+  }
+
+  // Toggle product visibility for a supplier
+  const toggleProducts = (supplierId: string) => {
+    const supplier = suppliers.find(s => s.id === supplierId)
+    
+    if (!supplier) return
+
+    if (supplier.showProducts) {
+      // Hide products
+      setSuppliers(prev =>
+        prev.map(s =>
+          s.id === supplierId ? { ...s, showProducts: false } : s
+        )
+      )
+    } else if (supplier.products && supplier.products.length > 0) {
+      // Already loaded, just show
+      setSuppliers(prev =>
+        prev.map(s =>
+          s.id === supplierId ? { ...s, showProducts: true } : s
+        )
+      )
+    } else {
+      // Load products first time
+      loadSupplierProducts(supplierId)
+    }
+  }
 
   // Filter suppliers based on search query
   const filteredSuppliers = suppliers.filter((supplier) => {
@@ -254,35 +307,80 @@ export default function BrowseSuppliersPage() {
                         <span>{supplier.phone}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Package className="h-4 w-4" />
-                      <span>
-                        {supplier.product_count > 0
-                          ? `${supplier.product_count} product${supplier.product_count !== 1 ? 's' : ''}`
-                          : 'Setting up catalog'}
-                      </span>
-                    </div>
                     
-                    {/* Dynamic action button based on auth state */}
-                    {!user ? (
-                      <Button className="w-full" variant="outline" asChild>
-                        <Link href="/buyer-register">Connect (Register Required)</Link>
-                      </Button>
-                    ) : profile?.role === 'buyer' ? (
-                      <Button className="w-full" asChild>
-                        <Link href={`/buyer/rfqs/new?supplier=${supplier.id}`}>
-                          Send RFQ
-                        </Link>
-                      </Button>
-                    ) : profile?.role === 'supplier' ? (
-                      <Button className="w-full" variant="outline" disabled>
-                        Supplier Profile
-                      </Button>
-                    ) : (
-                      <Button className="w-full" variant="outline" asChild>
-                        <Link href="/buyer-register">Get Started</Link>
+                    {/* Product Count with Toggle */}
+                    {supplier.product_count > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-between text-sm text-muted-foreground hover:text-foreground"
+                        onClick={() => toggleProducts(supplier.id)}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Package className="h-4 w-4" />
+                          {supplier.product_count} product{supplier.product_count !== 1 ? 's' : ''}
+                        </span>
+                        {supplier.showProducts ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
                       </Button>
                     )}
+
+                    {/* Product List Showcase */}
+                    {supplier.showProducts && supplier.products && supplier.products.length > 0 && (
+                      <div className="border-t pt-3 space-y-2">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase">Product Catalog</p>
+                        {supplier.products.map((product) => (
+                          <div key={product.id} className="flex items-start justify-between text-xs bg-accent-buyer/30 p-2 rounded">
+                            <div className="flex-1">
+                              <p className="font-medium text-foreground">{product.name}</p>
+                              <p className="text-muted-foreground">{product.category}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-[#0049B7]">${product.price}/{product.unit}</p>
+                              <p className="text-muted-foreground">MOQ: {product.moq}</p>
+                            </div>
+                          </div>
+                        ))}
+                        {supplier.product_count > 5 && (
+                          <p className="text-xs text-center text-muted-foreground italic">
+                            +{supplier.product_count - 5} more product{supplier.product_count - 5 !== 1 ? 's' : ''}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {supplier.product_count === 0 && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Package className="h-4 w-4" />
+                        <span>Setting up catalog</span>
+                      </div>
+                    )}
+                    
+                    {/* Dynamic action button based on auth state */}
+                    <div className="pt-2">
+                      {!user ? (
+                        <Button className="w-full" variant="outline" asChild>
+                          <Link href="/buyer-register">Connect (Register Required)</Link>
+                        </Button>
+                      ) : profile?.role === 'buyer' ? (
+                        <Button className="w-full" asChild>
+                          <Link href={`/buyer/rfqs/new?supplier=${supplier.id}`}>
+                            Send RFQ
+                          </Link>
+                        </Button>
+                      ) : profile?.role === 'supplier' ? (
+                        <Button className="w-full" variant="outline" disabled>
+                          Supplier Profile
+                        </Button>
+                      ) : (
+                        <Button className="w-full" variant="outline" asChild>
+                          <Link href="/buyer-register">Get Started</Link>
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
