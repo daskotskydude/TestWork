@@ -24,19 +24,34 @@ export default function DebugPage() {
     // First check auth
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     
+    // Get profile
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser?.id)
+      .single()
+    
     // Then query RFQs
     const { data, error } = await supabase
       .from('rfqs')
-      .select('*, buyer:buyer_id(org_name, role)')
+      .select('*, buyer:buyer_id(id, org_name, role)')
       .order('created_at', { ascending: false })
     
     setRfqCheck({ 
       currentUserId: currentUser?.id,
+      currentProfile: profileData,
       data, 
       error, 
       count: data?.length,
       ownedByCurrentUser: data?.filter(r => r.buyer_id === currentUser?.id).length,
-      ownedByOthers: data?.filter(r => r.buyer_id !== currentUser?.id).length
+      ownedByOthers: data?.filter(r => r.buyer_id !== currentUser?.id).length,
+      rfqDetails: data?.map(r => ({
+        id: r.id,
+        title: r.title,
+        buyer_id: r.buyer_id,
+        matches_current_user: r.buyer_id === currentUser?.id,
+        buyer_org: r.buyer?.org_name
+      }))
     })
   }
 
