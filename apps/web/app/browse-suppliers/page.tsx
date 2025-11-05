@@ -189,11 +189,11 @@ export default function BrowseSuppliersPage() {
                           className="w-12 h-12 rounded-lg object-cover"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-lg bg-accent-supplier flex items-center justify-center">
-                          <Building2 className="h-6 w-6 text-green-600" />
+                        <div className="w-12 h-12 rounded-lg bg-accent-buyer flex items-center justify-center">
+                          <Building2 className="h-6 w-6 text-[#0049B7] dark:text-blue-400" />
                         </div>
                       )}
-                      <Badge className="bg-accent-supplier text-green-700 dark:text-green-300">
+                      <Badge className="bg-accent-buyer text-[#0049B7] dark:text-blue-400 border-accent-buyer">
                         ✓ Verified
                       </Badge>
                     </div>
@@ -234,18 +234,18 @@ export default function BrowseSuppliersPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="bg-gradient-to-r from-blue-50 via-cyan-50 to-green-50 dark:from-gray-800 dark:via-gray-850 dark:to-gray-900 rounded-xl p-12 text-center border border-blue-100 dark:border-gray-700">
+        <section className="bg-gradient-to-r from-blue-50 via-blue-100/50 to-blue-50 dark:from-gray-800 dark:via-gray-850 dark:to-gray-900 rounded-xl p-12 text-center border border-[#0049B7]/20 dark:border-blue-800/30">
           <h2 className="text-3xl font-bold mb-4">Ready to connect with suppliers?</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             Sign up as a buyer to send RFQs and receive quotes, or join as a supplier to showcase your products.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+            <Button asChild size="lg" className="bg-[#0049B7] hover:bg-[#003a94] dark:bg-[#0049B7] dark:hover:bg-[#005cd9]">
               <Link href="/buyer-register">
                 Get Started as Buyer
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-950">
+            <Button asChild size="lg" variant="outline" className="border-[#0049B7] text-[#0049B7] hover:bg-blue-50 dark:hover:bg-blue-950/30">
               <Link href="/supplier-register">
                 Join as Supplier
               </Link>

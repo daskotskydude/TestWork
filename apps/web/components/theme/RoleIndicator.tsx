@@ -9,22 +9,21 @@ interface RoleIndicatorProps {
 }
 
 /**
- * RoleIndicator - Visual badge showing user's role with color-coded theme
+ * RoleIndicator - Visual badge showing user's role with unified brutal blue theme
  * 
- * Buyers: Blue badge with shopping bag icon
- * Suppliers: Green badge with store icon
+ * Both buyers and suppliers use the same modern blue color scheme
  */
 export function RoleIndicator({ role, className = '' }: RoleIndicatorProps) {
   const config = {
     buyer: {
       label: 'Buyer Account',
       icon: ShoppingBag,
-      className: 'bg-accent-buyer border-accent-buyer text-blue-700 dark:text-blue-300',
+      className: 'bg-accent-buyer border-accent-buyer text-[#0049B7] dark:text-blue-400',
     },
     supplier: {
       label: 'Supplier Account',
       icon: Store,
-      className: 'bg-accent-supplier border-accent-supplier text-green-700 dark:text-green-300',
+      className: 'bg-accent-supplier border-accent-supplier text-[#0049B7] dark:text-blue-400',
     },
   }
 
