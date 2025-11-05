@@ -23,7 +23,7 @@ interface NotificationSettings {
 }
 
 export default function SupplierSettingsPage() {
-  const { profile } = useAuth()
+  const { profile, refreshProfile } = useAuth()
   const [notifications, setNotifications] = useState<NotificationSettings>({
     emailNotifications: true,
     newRFQAlerts: true,
@@ -31,9 +31,15 @@ export default function SupplierSettingsPage() {
     quoteAccepted: true,
     connectionRequests: true,
   })
+  const [profileForm, setProfileForm] = useState({
+    phone: '',
+    address: '',
+    description: '',
+  })
+  const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Load settings from localStorage on mount
+  // Load settings from localStorage and initialize profile form
   useEffect(() => {
     const saved = localStorage.getItem('supplier-notification-settings')
     if (saved) {
@@ -43,7 +49,15 @@ export default function SupplierSettingsPage() {
         console.error('Failed to load notification settings:', e)
       }
     }
-  }, [])
+
+    if (profile) {
+      setProfileForm({
+        phone: profile.phone || '',
+        address: profile.address || '',
+        description: profile.description || '',
+      })
+    }
+  }, [profile])
 
   const handleToggle = (key: keyof NotificationSettings) => {
     setNotifications(prev => ({
@@ -63,6 +77,46 @@ export default function SupplierSettingsPage() {
     }, 500)
   }
 
+  const handleProfileUpdate = async () => {
+    if (!profile?.id) return
+    
+    setIsSaving(true)
+    try {
+      const supabase = require('@/../../packages/lib/useSupabase').useSupabase()
+      const { error } = await supabase()
+        .from('profiles')
+        .update({
+          phone: profileForm.phone || null,
+          address: profileForm.address || null,
+          description: profileForm.description || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile.id)
+
+      if (error) throw error
+
+      await refreshProfile()
+      setIsEditing(false)
+      toast.success('Profile updated successfully')
+    } catch (error: any) {
+      console.error('Profile update error:', error)
+      toast.error(error.message || 'Failed to update profile')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    if (profile) {
+      setProfileForm({
+        phone: profile.phone || '',
+        address: profile.address || '',
+        description: profile.description || '',
+      })
+    }
+  }
+
   return (
     <AppShell>
       <div className="space-y-6">
@@ -74,11 +128,20 @@ export default function SupplierSettingsPage() {
         {/* Profile Settings */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Supplier Profile
-            </CardTitle>
-            <CardDescription>View and update your business information</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Supplier Profile
+                </CardTitle>
+                <CardDescription>View and update your business information</CardDescription>
+              </div>
+              {!isEditing && (
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                  Edit Profile
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -91,19 +154,44 @@ export default function SupplierSettingsPage() {
             </div>
             <div>
               <Label>Phone</Label>
-              <Input value={profile?.phone || 'Not set'} disabled />
+              <Input 
+                value={isEditing ? profileForm.phone : (profile?.phone || 'Not set')} 
+                disabled={!isEditing}
+                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                placeholder="Enter phone number"
+              />
             </div>
             <div>
               <Label>Address</Label>
-              <Textarea value={profile?.address || 'Not set'} disabled rows={2} />
+              <Textarea 
+                value={isEditing ? profileForm.address : (profile?.address || 'Not set')} 
+                disabled={!isEditing}
+                onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+                rows={2}
+                placeholder="Enter business address"
+              />
             </div>
             <div>
               <Label>Description</Label>
-              <Textarea value={profile?.description || 'Not set'} disabled rows={3} />
+              <Textarea 
+                value={isEditing ? profileForm.description : (profile?.description || 'Not set')} 
+                disabled={!isEditing}
+                onChange={(e) => setProfileForm({ ...profileForm, description: e.target.value })}
+                rows={3}
+                placeholder="Describe your business and services"
+              />
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Profile editing can be enabled in your Supabase dashboard
-            </p>
+            {isEditing && (
+              <div className="flex gap-2 pt-2">
+                <Button onClick={handleProfileUpdate} disabled={isSaving}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </Button>
+                <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
+                  Cancel
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 

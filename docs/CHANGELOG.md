@@ -11,6 +11,12 @@ The format follows [Conventional Commits](https://www.conventionalcommits.org/).
 ### Phase F - Production Ready (Complete ✅)
 
 #### 2025-11-04
+- **feat(settings)**: add profile editing to buyer and supplier settings
+  - Implemented edit mode with phone, address, and description fields
+  - Profile updates save to Supabase and refresh automatically
+  - Added cancel button to revert unsaved changes
+  - Notification preferences already functional with localStorage
+
 - **fix(auth)**: handle profile creation under Supabase RLS
   - Store registration details in Supabase user metadata during sign up
   - Bootstrap `profiles` rows once a session exists to avoid RLS insert errors
