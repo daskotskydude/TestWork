@@ -263,29 +263,114 @@ export default function BuyerSettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Advanced Settings - Future */}
+        {/* Advanced Settings */}
         <Card>
           <CardHeader>
             <CardTitle>Advanced Settings</CardTitle>
             <CardDescription>Additional configuration options</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-semibold mb-2">Account Security</h4>
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>• Change password</li>
-                  <li>• Two-factor authentication</li>
-                  <li>• Session management</li>
-                </ul>
+          <CardContent className="space-y-6">
+            {/* Account Security */}
+            <div>
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <SettingsIcon className="h-4 w-4" />
+                Account Security
+              </h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Change Password</p>
+                    <p className="text-sm text-muted-foreground">Update your account password</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => toast.info('Password change coming soon')}>
+                    Change
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Two-Factor Authentication</p>
+                    <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => toast.info('2FA setup coming soon')}>
+                    Enable
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Active Sessions</p>
+                    <p className="text-sm text-muted-foreground">Manage logged-in devices</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => toast.info('Session management coming soon')}>
+                    View
+                  </Button>
+                </div>
               </div>
-              <div>
-                <h4 className="font-semibold mb-2">Procurement Preferences</h4>
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>• Preferred suppliers</li>
-                  <li>• Auto-approval rules</li>
-                  <li>• Budget thresholds</li>
-                </ul>
+            </div>
+
+            {/* Procurement Preferences */}
+            <div>
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                Procurement Preferences
+              </h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Preferred Suppliers</p>
+                    <p className="text-sm text-muted-foreground">Manage your trusted supplier list</p>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/buyer/connections">
+                      Manage
+                    </Link>
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Auto-Approval Rules</p>
+                    <p className="text-sm text-muted-foreground">Set criteria for automatic quote acceptance</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => toast.info('Auto-approval rules coming soon')}>
+                    Configure
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Budget Thresholds</p>
+                    <p className="text-sm text-muted-foreground">Define spending limits and alerts</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => toast.info('Budget thresholds coming soon')}>
+                    Set Limits
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Data & Privacy */}
+            <div>
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Data & Privacy
+              </h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Export Data</p>
+                    <p className="text-sm text-muted-foreground">Download all your RFQs, orders, and inventory</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => toast.info('Data export coming soon')}>
+                    Export
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Delete Account</p>
+                    <p className="text-sm text-muted-foreground text-red-600">Permanently delete your account and data</p>
+                  </div>
+                  <Button variant="destructive" size="sm" onClick={() => toast.error('Account deletion requires admin approval')}>
+                    Delete
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
