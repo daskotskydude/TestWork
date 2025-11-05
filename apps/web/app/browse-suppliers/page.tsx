@@ -6,15 +6,22 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Search, MapPin, Star, Package, Building2, Mail, Phone, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, MapPin, Package, Building2, X, Mail, Phone, ExternalLink, UserPlus, Send } from 'lucide-react'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
 import { useAuth } from '@/lib/auth-context'
 import type { Profile, Product } from '@/../../packages/lib/supabaseClient'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { toast } from 'sonner'
 
 interface SupplierWithStats extends Profile {
   product_count: number
   products?: Product[]
-  showProducts?: boolean
 }
 
 export default function BrowseSuppliersPage() {
@@ -23,6 +30,8 @@ export default function BrowseSuppliersPage() {
   const [suppliers, setSuppliers] = useState<SupplierWithStats[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierWithStats | null>(null)
+  const [loadingProducts, setLoadingProducts] = useState(false)
 
   useEffect(() => {
     async function loadSuppliers() {
@@ -62,54 +71,61 @@ export default function BrowseSuppliersPage() {
     loadSuppliers()
   }, [supabase])
 
-  // Load products for a specific supplier
+  // Load products for selected supplier in modal
   const loadSupplierProducts = async (supplierId: string) => {
+    setLoadingProducts(true)
     try {
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('supplier_id', supplierId)
         .order('category')
-        .limit(5) // Show first 5 products
 
       if (error) throw error
 
-      // Update the supplier in the list with their products
-      setSuppliers(prev =>
-        prev.map(s =>
-          s.id === supplierId
-            ? { ...s, products: data || [], showProducts: true }
-            : s
-        )
-      )
+      // Update selected supplier with products
+      if (selectedSupplier && selectedSupplier.id === supplierId) {
+        setSelectedSupplier({ ...selectedSupplier, products: data || [] })
+      }
     } catch (error) {
       console.error('Failed to load products:', error)
+      toast.error('Failed to load products')
+    } finally {
+      setLoadingProducts(false)
     }
   }
 
-  // Toggle product visibility for a supplier
-  const toggleProducts = (supplierId: string) => {
-    const supplier = suppliers.find(s => s.id === supplierId)
-    
-    if (!supplier) return
+  // Open supplier profile modal
+  const handleViewProfile = (supplier: SupplierWithStats) => {
+    setSelectedSupplier(supplier)
+    if (!supplier.products) {
+      loadSupplierProducts(supplier.id)
+    }
+  }
 
-    if (supplier.showProducts) {
-      // Hide products
-      setSuppliers(prev =>
-        prev.map(s =>
-          s.id === supplierId ? { ...s, showProducts: false } : s
-        )
-      )
-    } else if (supplier.products && supplier.products.length > 0) {
-      // Already loaded, just show
-      setSuppliers(prev =>
-        prev.map(s =>
-          s.id === supplierId ? { ...s, showProducts: true } : s
-        )
-      )
-    } else {
-      // Load products first time
-      loadSupplierProducts(supplierId)
+  // Add supplier to connections
+  const handleAddSupplier = async () => {
+    if (!user || !selectedSupplier) return
+
+    try {
+      const { error } = await supabase
+        .from('connections')
+        .insert({
+          buyer_id: user.id,
+          supplier_id: selectedSupplier.id,
+          status: 'pending',
+        })
+
+      if (error) throw error
+
+      toast.success('Supplier connection request sent!')
+    } catch (error: any) {
+      if (error.code === '23505') {
+        toast.error('Already connected with this supplier')
+      } else {
+        console.error('Failed to add supplier:', error)
+        toast.error('Failed to add supplier')
+      }
     }
   }
 
@@ -301,85 +317,27 @@ export default function BrowseSuppliersPage() {
                         <span className="truncate">{supplier.address}</span>
                       </div>
                     )}
-                    {supplier.phone && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="font-medium">📞</span>
-                        <span>{supplier.phone}</span>
-                      </div>
-                    )}
                     
-                    {/* Product Count with Toggle */}
-                    {supplier.product_count > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-between text-sm text-muted-foreground hover:text-foreground"
-                        onClick={() => toggleProducts(supplier.id)}
-                      >
-                        <span className="flex items-center gap-2">
-                          <Package className="h-4 w-4" />
-                          {supplier.product_count} product{supplier.product_count !== 1 ? 's' : ''}
-                        </span>
-                        {supplier.showProducts ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
-
-                    {/* Product List Showcase */}
-                    {supplier.showProducts && supplier.products && supplier.products.length > 0 && (
-                      <div className="border-t pt-3 space-y-2">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase">Product Catalog</p>
-                        {supplier.products.map((product) => (
-                          <div key={product.id} className="flex items-start justify-between text-xs bg-accent-buyer/30 p-2 rounded">
-                            <div className="flex-1">
-                              <p className="font-medium text-foreground">{product.name}</p>
-                              <p className="text-muted-foreground">{product.category}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-semibold text-[#0049B7]">${product.price}/{product.unit}</p>
-                              <p className="text-muted-foreground">MOQ: {product.moq}</p>
-                            </div>
-                          </div>
-                        ))}
-                        {supplier.product_count > 5 && (
-                          <p className="text-xs text-center text-muted-foreground italic">
-                            +{supplier.product_count - 5} more product{supplier.product_count - 5 !== 1 ? 's' : ''}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {supplier.product_count === 0 && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Package className="h-4 w-4" />
-                        <span>Setting up catalog</span>
-                      </div>
-                    )}
+                    {/* Product Count */}
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Package className="h-4 w-4" />
+                      <span>
+                        {supplier.product_count > 0
+                          ? `${supplier.product_count} product${supplier.product_count !== 1 ? 's' : ''}`
+                          : 'Setting up catalog'}
+                      </span>
+                    </div>
                     
-                    {/* Dynamic action button based on auth state */}
+                    {/* View Profile Button */}
                     <div className="pt-2">
-                      {!user ? (
-                        <Button className="w-full" variant="outline" asChild>
-                          <Link href="/buyer-register">Connect (Register Required)</Link>
-                        </Button>
-                      ) : profile?.role === 'buyer' ? (
-                        <Button className="w-full" asChild>
-                          <Link href={`/buyer/rfqs/new?supplier=${supplier.id}`}>
-                            Send RFQ
-                          </Link>
-                        </Button>
-                      ) : profile?.role === 'supplier' ? (
-                        <Button className="w-full" variant="outline" disabled>
-                          Supplier Profile
-                        </Button>
-                      ) : (
-                        <Button className="w-full" variant="outline" asChild>
-                          <Link href="/buyer-register">Get Started</Link>
-                        </Button>
-                      )}
+                      <Button 
+                        className="w-full" 
+                        variant="outline"
+                        onClick={() => handleViewProfile(supplier)}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View Profile
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -387,6 +345,158 @@ export default function BrowseSuppliersPage() {
             </div>
           )}
         </section>
+
+        {/* Supplier Profile Modal */}
+        <Dialog open={!!selectedSupplier} onOpenChange={(open: boolean) => !open && setSelectedSupplier(null)}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            {selectedSupplier && (
+              <>
+                <DialogHeader>
+                  <div className="flex items-start gap-4">
+                    {selectedSupplier.logo_url ? (
+                      <img
+                        src={selectedSupplier.logo_url}
+                        alt={`${selectedSupplier.org_name} logo`}
+                        className="w-16 h-16 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-lg bg-accent-buyer flex items-center justify-center">
+                        <Building2 className="h-8 w-8 text-[#0049B7]" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <DialogTitle className="text-2xl">{selectedSupplier.org_name}</DialogTitle>
+                      <DialogDescription className="mt-1">
+                        {selectedSupplier.description || 'Professional B2B supplier'}
+                      </DialogDescription>
+                      <Badge className="mt-2 bg-accent-buyer text-[#0049B7] border-accent-buyer">
+                        ✓ Verified Supplier
+                      </Badge>
+                    </div>
+                  </div>
+                </DialogHeader>
+
+                <div className="space-y-6 mt-6">
+                  {/* Contact Information */}
+                  <div>
+                    <h3 className="font-semibold text-lg mb-3">Contact Information</h3>
+                    <div className="space-y-2">
+                      {selectedSupplier.address && (
+                        <div className="flex items-start gap-3 text-sm">
+                          <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                          <span>{selectedSupplier.address}</span>
+                        </div>
+                      )}
+                      {selectedSupplier.email && (
+                        <div className="flex items-center gap-3 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span>{selectedSupplier.email}</span>
+                        </div>
+                      )}
+                      {selectedSupplier.phone && (
+                        <div className="flex items-center gap-3 text-sm">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span>{selectedSupplier.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Product Catalog */}
+                  <div>
+                    <h3 className="font-semibold text-lg mb-3">
+                      Product Catalog ({selectedSupplier.product_count} items)
+                    </h3>
+                    {loadingProducts ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0049B7]"></div>
+                      </div>
+                    ) : selectedSupplier.products && selectedSupplier.products.length > 0 ? (
+                      <div className="grid gap-3">
+                        {selectedSupplier.products.map((product) => (
+                          <Card key={product.id} className="bg-accent-buyer/20">
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h4 className="font-semibold">{product.name}</h4>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {product.category}
+                                    {product.sku && ` • SKU: ${product.sku}`}
+                                  </p>
+                                  {product.description && (
+                                    <p className="text-sm text-muted-foreground mt-2">
+                                      {product.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="text-right ml-4">
+                                  <p className="text-lg font-bold text-[#0049B7]">
+                                    ${product.price}/{product.unit}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    MOQ: {product.moq} {product.unit}
+                                  </p>
+                                  <Badge
+                                    variant={Number(product.stock) > 0 ? 'default' : 'secondary'}
+                                    className="mt-2"
+                                  >
+                                    {Number(product.stock) > 0
+                                      ? `${product.stock} in stock`
+                                      : 'Out of stock'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>No products available yet</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  {user && profile?.role === 'buyer' && (
+                    <div className="flex gap-3 pt-4 border-t">
+                      <Button
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedSupplier(null)
+                          window.location.href = `/buyer/rfqs/new?supplier=${selectedSupplier.id}`
+                        }}
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Send RFQ to This Supplier
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={handleAddSupplier}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add to My Suppliers
+                      </Button>
+                    </div>
+                  )}
+
+                  {!user && (
+                    <div className="pt-4 border-t text-center">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Register as a buyer to send RFQs and connect with suppliers
+                      </p>
+                      <Button asChild>
+                        <Link href="/buyer-register">Register as Buyer</Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* CTA Section */}
         <section className="bg-gradient-to-r from-blue-50 via-blue-100/50 to-blue-50 dark:from-gray-800 dark:via-gray-850 dark:to-gray-900 rounded-xl p-12 text-center border border-[#0049B7]/20 dark:border-blue-800/30">
