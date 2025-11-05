@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Search, MapPin, Star, Package, Building2 } from 'lucide-react'
+import { Search, MapPin, Star, Package, Building2, Mail, Phone } from 'lucide-react'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
+import { useAuth } from '@/lib/auth-context'
 import type { Profile } from '@/../../packages/lib/supabaseClient'
 
 interface SupplierWithStats extends Profile {
@@ -16,6 +17,7 @@ interface SupplierWithStats extends Profile {
 
 export default function BrowseSuppliersPage() {
   const supabase = useSupabase()
+  const { user, profile } = useAuth()
   const [suppliers, setSuppliers] = useState<SupplierWithStats[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -84,16 +86,33 @@ export default function BrowseSuppliersPage() {
             </div>
             <span className="font-bold text-lg">ProcureLink</span>
           </Link>
-          <nav className="flex gap-4">
+          <nav className="flex gap-4 items-center">
             <Button asChild variant="ghost">
               <Link href="/how-it-works">How It Works</Link>
             </Button>
-            <Button asChild variant="ghost">
-              <Link href="/buyer-register">For Buyers</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/supplier-register">For Suppliers</Link>
-            </Button>
+            
+            {!user ? (
+              <>
+                <Button asChild variant="ghost">
+                  <Link href="/buyer-register">For Buyers</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/supplier-register">For Suppliers</Link>
+                </Button>
+              </>
+            ) : profile?.role === 'buyer' ? (
+              <Button asChild>
+                <Link href="/buyer/dashboard">My Dashboard</Link>
+              </Button>
+            ) : profile?.role === 'supplier' ? (
+              <Button asChild>
+                <Link href="/supplier/dashboard">My Dashboard</Link>
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link href="/login">Login</Link>
+              </Button>
+            )}
           </nav>
         </div>
       </header>
@@ -123,26 +142,46 @@ export default function BrowseSuppliersPage() {
           </div>
         </section>
 
-        {/* Info Card */}
-        <div className="max-w-4xl mx-auto">
-          <Card>
-            <CardContent className="text-center py-8">
-              <h3 className="text-lg font-semibold mb-2">Supplier Directory</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Browse verified suppliers and connect with the right partners for your business. 
-                Full search and filtering capabilities available for registered buyers.
-              </p>
-              <div className="flex gap-2 justify-center">
-                <Button asChild>
-                  <Link href="/buyer-register">Register as Buyer</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/login">Login</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Info Card - Only show for non-authenticated users */}
+        {!user && (
+          <div className="max-w-4xl mx-auto">
+            <Card>
+              <CardContent className="text-center py-8">
+                <h3 className="text-lg font-semibold mb-2">Supplier Directory</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Browse verified suppliers and connect with the right partners for your business. 
+                  Register as a buyer to send RFQs and receive quotes.
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Button asChild>
+                    <Link href="/buyer-register">Register as Buyer</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/login">Login</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Welcome message for logged-in users */}
+        {user && profile && (
+          <div className="max-w-4xl mx-auto">
+            <Card className="bg-accent-buyer border-accent-buyer">
+              <CardContent className="text-center py-6">
+                <h3 className="text-lg font-semibold mb-2">
+                  Welcome, {profile.org_name}!
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {profile.role === 'buyer'
+                    ? 'Click "Send RFQ" on any supplier to start a procurement request.'
+                    : 'Viewing supplier directory. Switch to your dashboard to manage your profile.'}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Supplier Listings */}
         <section>
@@ -223,9 +262,27 @@ export default function BrowseSuppliersPage() {
                           : 'Setting up catalog'}
                       </span>
                     </div>
-                    <Button className="w-full" variant="outline" asChild>
-                      <Link href="/buyer-register">Connect (Register Required)</Link>
-                    </Button>
+                    
+                    {/* Dynamic action button based on auth state */}
+                    {!user ? (
+                      <Button className="w-full" variant="outline" asChild>
+                        <Link href="/buyer-register">Connect (Register Required)</Link>
+                      </Button>
+                    ) : profile?.role === 'buyer' ? (
+                      <Button className="w-full" asChild>
+                        <Link href={`/buyer/rfqs/new?supplier=${supplier.id}`}>
+                          Send RFQ
+                        </Link>
+                      </Button>
+                    ) : profile?.role === 'supplier' ? (
+                      <Button className="w-full" variant="outline" disabled>
+                        Supplier Profile
+                      </Button>
+                    ) : (
+                      <Button className="w-full" variant="outline" asChild>
+                        <Link href="/buyer-register">Get Started</Link>
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               ))}
