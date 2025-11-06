@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Turnstile } from '@marsidev/react-turnstile'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
@@ -21,11 +21,14 @@ const STEPS = ['Details', 'Items', 'Budget', 'Review']
 
 export default function NewRFQPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
   const supabase = useSupabase()
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState('')
+  const [targetSupplierId, setTargetSupplierId] = useState<string | null>(null)
+  const [targetSupplierName, setTargetSupplierName] = useState<string | null>(null)
   
   const [formData, setFormData] = useState({
     title: '',
@@ -35,6 +38,25 @@ export default function NewRFQPage() {
     budget_min: 0,
     budget_max: 0,
   })
+
+  // Check for supplier parameter in URL
+  useEffect(() => {
+    const supplierId = searchParams.get('supplier')
+    if (supplierId) {
+      setTargetSupplierId(supplierId)
+      // Fetch supplier name
+      supabase
+        .from('profiles')
+        .select('org_name')
+        .eq('id', supplierId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setTargetSupplierName(data.org_name)
+          }
+        })
+    }
+  }, [searchParams, supabase])
 
   const updateFormData = (field: string, value: any) => {
     setFormData({ ...formData, [field]: value })
@@ -97,7 +119,26 @@ export default function NewRFQPage() {
         formData.items
       )
 
-      toast.success('RFQ created successfully!')
+      // If targeting a specific supplier, create an invitation
+      if (targetSupplierId) {
+        const { error: inviteError } = await supabase
+          .from('rfq_invitations')
+          .insert({
+            rfq_id: rfq.id,
+            supplier_id: targetSupplierId,
+          })
+
+        if (inviteError) {
+          console.error('Failed to create invitation:', inviteError)
+          // Don't fail the whole RFQ creation, just warn
+          toast.warning('RFQ created but failed to send invitation to supplier')
+        } else {
+          toast.success(`RFQ sent to ${targetSupplierName || 'selected supplier'}!`)
+        }
+      } else {
+        toast.success('RFQ created and visible to all suppliers!')
+      }
+
       router.push(`/buyer/rfqs/${rfq.id}`)
     } catch (error) {
       console.error('Failed to create RFQ:', error)
@@ -114,6 +155,16 @@ export default function NewRFQPage() {
         <div>
           <h1 className="text-3xl font-bold">Create New RFQ</h1>
           <p className="text-muted-foreground">4-step wizard to create a detailed procurement request</p>
+          
+          {/* Target Supplier Badge */}
+          {targetSupplierName && (
+            <div className="mt-3 p-3 bg-accent-buyer/20 border border-[#0049B7]/30 rounded-lg flex items-center gap-2">
+              <Badge className="bg-[#0049B7] text-white">Direct RFQ</Badge>
+              <span className="text-sm">
+                This RFQ will be sent only to: <strong>{targetSupplierName}</strong>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Progress Steps */}
