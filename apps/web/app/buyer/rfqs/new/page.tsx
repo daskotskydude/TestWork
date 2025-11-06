@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, ArrowRight, Plus, Trash2, Check, Loader2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Plus, Trash2, Check, Loader2, X, Users, Building2 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useSupabase } from '@/../../packages/lib/useSupabase'
 import { createRFQ } from '@/../../packages/lib/data'
@@ -29,6 +29,8 @@ export default function NewRFQPage() {
   const [turnstileToken, setTurnstileToken] = useState('')
   const [targetSupplierId, setTargetSupplierId] = useState<string | null>(null)
   const [targetSupplierName, setTargetSupplierName] = useState<string | null>(null)
+  const [mySuppliers, setMySuppliers] = useState<any[]>([])
+  const [showSupplierSelector, setShowSupplierSelector] = useState(false)
   
   const [formData, setFormData] = useState({
     title: '',
@@ -38,6 +40,22 @@ export default function NewRFQPage() {
     budget_min: 0,
     budget_max: 0,
   })
+
+  // Load connected suppliers
+  useEffect(() => {
+    if (!user) return
+
+    supabase
+      .from('connections')
+      .select('supplier:supplier_id(*)')
+      .eq('buyer_id', user.id)
+      .eq('status', 'accepted')
+      .then(({ data }) => {
+        if (data) {
+          setMySuppliers(data.map(c => c.supplier).filter(Boolean))
+        }
+      })
+  }, [user, supabase])
 
   // Check for supplier parameter in URL
   useEffect(() => {
@@ -57,6 +75,22 @@ export default function NewRFQPage() {
         })
     }
   }, [searchParams, supabase])
+
+  // Select supplier from dropdown
+  function selectSupplier(supplier: any) {
+    setTargetSupplierId(supplier.id)
+    setTargetSupplierName(supplier.org_name)
+    setShowSupplierSelector(false)
+    toast.success(`Selected ${supplier.org_name}`)
+  }
+
+  // Clear supplier selection
+  function clearSupplierSelection() {
+    setTargetSupplierId(null)
+    setTargetSupplierName(null)
+    toast.info('RFQ will be sent to all suppliers')
+  }
+
 
   const updateFormData = (field: string, value: any) => {
     setFormData({ ...formData, [field]: value })
@@ -156,15 +190,73 @@ export default function NewRFQPage() {
           <h1 className="text-3xl font-bold">Create New RFQ</h1>
           <p className="text-muted-foreground">4-step wizard to create a detailed procurement request</p>
           
-          {/* Target Supplier Badge */}
-          {targetSupplierName && (
-            <div className="mt-3 p-3 bg-accent-buyer/20 border border-[#0049B7]/30 rounded-lg flex items-center gap-2">
-              <Badge className="bg-[#0049B7] text-white">Direct RFQ</Badge>
-              <span className="text-sm">
-                This RFQ will be sent only to: <strong>{targetSupplierName}</strong>
-              </span>
-            </div>
-          )}
+          {/* Supplier Selector */}
+          <div className="mt-4">
+            {targetSupplierName ? (
+              <div className="p-3 bg-accent-buyer/20 border border-[#0049B7]/30 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-[#0049B7] text-white">Direct RFQ</Badge>
+                  <span className="text-sm">
+                    Sending to: <strong>{targetSupplierName}</strong>
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearSupplierSelection}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Change to Broadcast
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSupplierSelector(!showSupplierSelector)}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Select from My Suppliers ({mySuppliers.length})
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  Or leave blank to send to all suppliers
+                </span>
+              </div>
+            )}
+
+            {/* Supplier Dropdown */}
+            {showSupplierSelector && mySuppliers.length > 0 && (
+              <Card className="mt-2">
+                <CardContent className="p-3">
+                  <p className="text-sm font-medium mb-2">Select a supplier:</p>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {mySuppliers.map((supplier) => (
+                      <div
+                        key={supplier.id}
+                        className="flex items-center justify-between p-2 border rounded hover:bg-accent cursor-pointer"
+                        onClick={() => selectSupplier(supplier)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {supplier.logo_url ? (
+                            <img src={supplier.logo_url} alt={supplier.org_name} className="w-8 h-8 rounded" />
+                          ) : (
+                            <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+                              <Building2 className="h-4 w-4" />
+                            </div>
+                          )}
+                          <span className="text-sm font-medium">{supplier.org_name}</span>
+                        </div>
+                        <Button size="sm" variant="ghost">
+                          Select
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
 
         {/* Progress Steps */}
