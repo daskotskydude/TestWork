@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Turnstile } from '@marsidev/react-turnstile'
 import { AppShell } from '@/components/layout/AppShell'
@@ -19,7 +19,7 @@ import { toast } from 'sonner'
 
 const STEPS = ['Details', 'Items', 'Budget', 'Review']
 
-export default function NewRFQPage() {
+function NewRFQForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
@@ -540,5 +540,19 @@ export default function NewRFQPage() {
         </div>
       </div>
     </AppShell>
+  )
+}
+
+export default function NewRFQPage() {
+  return (
+    <Suspense fallback={
+      <AppShell>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppShell>
+    }>
+      <NewRFQForm />
+    </Suspense>
   )
 }
